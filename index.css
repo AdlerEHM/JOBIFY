@@ -1,0 +1,138 @@
+/* Estilos base del cuerpo */
+body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-main);
+}
+
+.login-screen {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-card {
+    background: white;
+    width: 750px;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.logo-main {
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.tabs-header { 
+    display: flex; 
+    border-bottom: 1px solid #eee; 
+    margin-bottom: 30px; 
+}
+
+.tab-link {
+    flex: 1; 
+    padding: 15px; 
+    border: none; 
+    background: none; 
+    cursor: pointer;
+    font-size: 16px; 
+    color: #666; 
+    border-bottom: 3px solid transparent;
+}
+
+.tab-link.active { 
+    color: var(--primary); 
+    border-bottom: 3px solid var(--primary); 
+    font-weight: bold; 
+}
+
+.form-content { 
+    display: flex; 
+    gap: 40px; 
+    text-align: left; 
+}
+
+.column-inputs, .column-roles { 
+    flex: 1; 
+}
+
+.role-card {
+    border: 2px solid #eee; 
+    border-radius: 10px; 
+    padding: 20px;
+    margin-bottom: 15px; 
+    text-align: center; 
+    cursor: pointer;
+}
+
+.role-card.selected { 
+    border-color: var(--primary); 
+    background: #f8fbff; 
+}
+
+/* Estilos de inputs y botones */
+.input-group { 
+    margin-bottom: 15px; 
+}
+
+.input-group label { 
+    display: block; 
+    font-size: 13px; 
+    font-weight: bold; 
+    margin-bottom: 5px; 
+    color: #444; 
+}
+
+.btn-main {
+    width: 100%; 
+    background: var(--primary); 
+    color: white;
+    padding: 12px; 
+    border: none; 
+    border-radius: 6px; 
+    font-weight: bold; 
+    cursor: pointer;
+}
+
+.separator {
+    text-align: center;
+    margin: 15px 0;
+    color: #999;
+}
+
+.btn-google {
+    width: 100%; 
+    background: white; 
+    border: 1px solid #ddd; 
+    padding: 10px;
+    border-radius: 6px; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    gap: 10px; 
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.card-footer {
+    margin-top: 30px; 
+    display: flex; 
+    justify-content: space-between;
+    font-size: 13px; 
+    border-top: 1px solid #eee; 
+    padding-top: 20px;
+}
+
+.link-footer {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.status-2fa {
+    color: #34a853;
+    font-weight: bold;
+}

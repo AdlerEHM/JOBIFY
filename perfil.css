@@ -1,0 +1,78 @@
+/* Contenedor centrado y blanco */
+.profile-container {
+    max-width: 600px; 
+    margin: 50px auto;
+    background: white; 
+    padding: 40px; 
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+.logo-profile {
+    color: var(--primary);
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* Estilos de Formulario */
+.form-group { margin-bottom: 20px; }
+.field-label { font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #444; }
+
+input[type="text"], 
+input[type="number"], 
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: inherit;
+    margin-top: 5px;
+}
+
+textarea { height: 120px; resize: none; }
+
+/* Nube de habilidades */
+.skills-cloud { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 8px; 
+    margin: 15px 0 25px 0; 
+}
+
+.skill-tag {
+    background: #e8f0fe; 
+    color: var(--primary);
+    padding: 8px 16px; 
+    border-radius: 20px; 
+    cursor: pointer; 
+    font-size: 13px;
+    transition: 0.2s;
+    border: 1px solid transparent;
+}
+
+.skill-tag:hover { border-color: var(--primary); }
+.skill-tag.selected { background: var(--primary); color: white; }
+
+/* Botón Guardar */
+.btn-main {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.btn-main:hover { opacity: 0.9; }
+
+.exclusive-fields {
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}

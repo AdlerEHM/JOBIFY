@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobify - Login</title>
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+<div class="login-screen">
+    <div class="login-card">
+        <h1 class="logo-main">JOBIFY</h1>
+
+        <div class="tabs-header">
+            <button id="btnTabLogin" class="tab-link">Iniciar Sesión</button>
+            <button id="btnTabRegister" class="tab-link active">Registrarse</button>
+        </div>
+
+        <div class="form-content" id="formContent">
+            <div class="column-inputs">
+                <div class="input-group">
+                    <label>Correo Electrónico</label>
+                    <input type="email" id="email" placeholder="Correo Electrónico">
+                </div>
+                <div class="input-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="password" placeholder="Contraseña">
+                </div>
+
+                <button id="btnSubmit" class="btn-main">Registrarse</button>
+
+                <div class="separator">ó</div>
+
+                <button class="btn-google">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="G" width="18">
+                    Iniciar Sesión con Google
+                </button>
+            </div>
+
+            <div class="column-roles" id="roleSelection">
+                <div class="role-card" id="roleEmpresa">
+                    <div class="role-icon">🏢</div>
+                    <span>Empresa</span>
+                </div>
+                <div class="role-card" id="roleProgramador">
+                    <div class="role-icon">💻</div>
+                    <span>Programador</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <a href="#" id="btnRecover" class="link-footer">Recuperar contraseña</a>
+            <div class="status-2fa">
+                <span class="shield-icon">🛡️</span> 2FA Activado
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobify - Mi Perfil</title>
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="perfil.css">
+</head>
+<body>
+
+    <div class="profile-container">
+        <h1 class="logo-profile">Configura tu Perfil</h1>
+        
+        <div id="profileForm">
+            <div class="form-group">
+                <label>Nombre Público</label>
+                <input type="text" id="displayName" placeholder="Nombre completo o de la Empresa">
+            </div>
+
+            <div class="form-group">
+                <p class="field-label">Logotipo o Foto (RQF006):</p>
+                <input type="file" id="profileImage" accept="image/png, image/jpeg">
+                <small id="uploadStatus"></small>
+            </div>
+            
+            <div id="companyFields" style="display:none;" class="exclusive-fields">
+                <p class="field-label">Descripción de la empresa (Máx. 1000 palabras):</p>
+                <textarea id="companyBio" placeholder="Cuéntanos sobre tu empresa..."></textarea>
+            </div>
+
+            <div id="devFields" style="display:none;" class="exclusive-fields">
+                <p class="field-label">Habilidades (Selecciona tus etiquetas):</p>
+                <div id="skillsCloud" class="skills-cloud">
+                    </div>
+                <p class="field-label">Rango de pago preferido (USD):</p>
+                <input type="number" id="payRange" placeholder="Ej: 500">
+            </div>
+
+            <button id="btnSaveProfile" class="btn-main">Guardar Perfil</button>
+        </div>
+    </div>
+
+    <script type="module" src="perfil.js"></script>
+</body>
+</html>

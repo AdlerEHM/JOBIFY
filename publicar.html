@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Jobify - Publicar Proyecto</title>
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="publicar.css">
+</head>
+<body>
+    <div class="publish-container">
+        <button onclick="window.location.href='dashboard.html'" class="btn-back">← Volver</button>
+        <h2>Publicar Nuevo Proyecto</h2>
+        
+        <div class="form-group">
+            <label>Título del Proyecto</label>
+            <input type="text" id="projTitle" placeholder="Ej: Desarrollo de App Móvil">
+        </div>
+
+        <div class="form-group">
+            <label>Presupuesto (USD)</label>
+            <input type="number" id="projBudget" placeholder="500">
+        </div>
+
+        <div class="form-group">
+            <label>Nivel Requerido</label>
+            <select id="projLevel">
+                <option value="Junior">Junior</option>
+                <option value="Semisenior">Semisenior</option>
+                <option value="Senior">Senior</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Duración (Semanas)</label>
+            <input type="number" id="projDuration" placeholder="4">
+        </div>
+
+        <div class="form-group">
+            <label>Descripción detallada</label>
+            <textarea id="projDesc" rows="5"></textarea>
+        </div>
+
+        <button id="btnPublish" class="btn-main">Subir Proyecto</button>
+    </div>
+
+    <script type="module" src="publicar.js"></script>
+</body>
+</html>
