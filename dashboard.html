@@ -18,31 +18,32 @@
             </div>
 
             <div class="user-actions">
-    <span class="notification-icon">🔔</span>
-    
-    <div class="profile-container-nav">
-        <div class="profile-trigger" id="profileTrigger">
-            <img id="userPhoto" src="" alt="" style="display:none;">
-            <div id="userInitial">?</div>
-        </div>
+                <button onclick="window.location.href='misproyectos.html'" class="btn-misproyectos">📁 Mis Proyectos</button>
+                <span class="notification-icon">🔔</span>
+                
+                <div class="profile-container-nav">
+                    <div class="profile-trigger" id="profileTrigger">
+                        <img id="userPhoto" src="" alt="" style="display:none;">
+                        <div id="userInitial">?</div>
+                    </div>
 
-        <div class="profile-dropdown" id="profileDropdown">
-            <div class="dropdown-header">
-                <div class="large-profile-circle" id="menuInitial">?</div>
-                <h4 id="menuName">Nombre Usuario</h4>
-                <p id="menuEmail">correo@ejemplo.com</p>
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="dropdown-header">
+                            <div class="large-profile-circle" id="menuInitial">?</div>
+                            <h4 id="menuName">Nombre Usuario</h4>
+                            <p id="menuEmail">correo@ejemplo.com</p>
+                        </div>
+                        <div class="dropdown-body">
+                            <button onclick="window.location.href='perfil.html'" class="btn-menu">
+                                ⚙️ Configurar Perfil
+                            </button>
+                        </div>
+                        <div class="dropdown-footer">
+                            <button id="btnLogout" class="btn-logout-dropdown">Cerrar Sesión</button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="dropdown-body">
-                <button onclick="window.location.href='perfil.html'" class="btn-menu">
-                    ⚙️ Configurar Perfil
-                </button>
-            </div>
-            <div class="dropdown-footer">
-                <button id="btnLogout" class="btn-logout-dropdown">Cerrar Sesión</button>
-            </div>
-        </div>
-    </div>
-    </div>
         </header>
 
         <div class="main-layout">
@@ -76,60 +77,61 @@
                 <div id="exclusiveEmpresa" style="display:none; margin-top: 20px;">
                     <button onclick="window.location.href='publicar.html'" class="btn-publish">Publicar Proyecto</button>
                 </div>
+
                 <div id="companyApplicants" style="display:none; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
                     <p class="group-label">Candidatos Recientes</p>
                     <div id="applicantsList" class="applicants-list">
-                    <p style="font-size: 12px; color: #999;">No hay postulaciones aún.</p> 
+                        <p style="font-size: 12px; color: #999;">No hay postulaciones aún.</p>
+                    </div>
                 </div>
-            </div>
             </aside>
 
             <main class="content-area">
                 <div class="projects-header">
                     <h3>Explorar Proyectos</h3>
                 </div>
-                <div class="projects-grid" id="projectsContainer">
-                    </div>
+                <div class="projects-grid" id="projectsContainer"></div>
             </main>
         </div>
     </div>
+
     <div id="projectModal" class="modal-overlay">
-    <div class="modal-content">
-        <button id="closeModal" class="btn-close-modal">&times;</button>
-        
-        <div class="modal-header">
-            <div class="modal-company-badge" id="modalCompanyLogo"></div>
-            <h2 id="modalTitle">Título del Proyecto</h2>
-            <span id="modalLevel" class="tag-level">Senior</span>
-        </div>
+        <div class="modal-content">
+            <button id="closeModal" class="btn-close-modal">&times;</button>
+            
+            <div class="modal-header">
+                <div class="modal-company-badge" id="modalCompanyLogo"></div>
+                <h2 id="modalTitle">Título del Proyecto</h2>
+                <span id="modalLevel" class="tag-level">Senior</span>
+            </div>
 
-        <div class="modal-body">
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="label">Presupuesto</span>
-                    <strong id="modalBudget">$0 USD</strong>
+            <div class="modal-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">Presupuesto</span>
+                        <strong id="modalBudget">$0 USD</strong>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Duración</span>
+                        <strong id="modalDuration">0 semanas</strong>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <span class="label">Duración</span>
-                    <strong id="modalDuration">0 semanas</strong>
+
+                <div class="description-section">
+                    <h4>Descripción</h4>
+                    <p id="modalDesc">Cargando descripción...</p>
+                </div>
+
+                <div class="tags-section">
+                    <h4>Etiquetas / Habilidades</h4>
+                    <div id="modalTags" class="card-tags"></div>
                 </div>
             </div>
 
-            <div class="description-section">
-                <h4>Descripción</h4>
-                <p id="modalDesc">Cargando descripción...</p>
-            </div>
-
-            <div class="tags-section">
-                <h4>Etiquetas / Habilidades</h4>
-                <div id="modalTags" class="card-tags"></div>
+            <div class="modal-footer">
+                <button id="btnApply" class="btn-main">Postularme ahora</button>
             </div>
         </div>
-
-        <div class="modal-footer">
-            <button id="btnApply" class="btn-main">Postularme ahora</button>
-        </div>
-    </div>
     </div>
 
     <script type="module" src="dashboard.js"></script>

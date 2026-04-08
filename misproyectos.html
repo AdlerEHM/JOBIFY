@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobify - Mis Proyectos</title>
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="misproyectos.css">
+</head>
+<body>
+
+    <header class="top-bar">
+        <button class="btn-back" onclick="window.location.href='dashboard.html'">← Volver</button>
+        <h2 class="logo-text">JOBIFY</h2>
+        <span id="roleBadge" class="role-badge">...</span>
+    </header>
+
+    <div id="loadingState" class="loading-state">
+        <div class="spinner"></div>
+        <p>Cargando...</p>
+    </div>
+
+    <main id="mainContent" style="display:none;">
+        <div class="page-header">
+            <h1 id="pageTitle">Mis Proyectos</h1>
+            <p id="pageSubtitle" class="page-subtitle"></p>
+        </div>
+        <div class="tabs-bar" id="tabsBar"></div>
+        <div class="tabs-content" id="tabsContent"></div>
+    </main>
+
+    <script type="module" src="misproyectos.js"></script>
+</body>
+</html>
