@@ -63,27 +63,23 @@ function renderizarProyectos(lista) {
     });
 }
 
-// CORRECCIÓN Bug 1 y Bug 3: presupuesto convertido a Number, slider con valor inicial 5000
 function filtrarAhorra() {
-    const presupuestoMax = parseInt(document.getElementById('budgetRange').value) || 5000;
+    const presupuestoMax = parseInt(document.getElementById('budgetRange').value);
     const checksMarcados = Array.from(document.querySelectorAll('.filter-check:checked'));
     const filtros = {
-        nivel:   checksMarcados.filter(c => c.dataset.tipo === "nivel").map(c => c.value),
+        nivel: checksMarcados.filter(c => c.dataset.tipo === "nivel").map(c => c.value),
         duracion: checksMarcados.filter(c => c.dataset.tipo === "duracion").map(c => c.value)
     };
 
     const resultados = todosLosProyectos.filter(p => {
-        // Bug 1 fix: convertir a Number para comparar correctamente
-        const cumplePresupuesto = Number(p.presupuesto) <= presupuestoMax;
+        const cumplePresupuesto = p.presupuesto <= presupuestoMax;
         const cumpleNivel = filtros.nivel.length === 0 || filtros.nivel.includes(p.nivel);
-
         let cumpleDuracion = true;
         if (filtros.duracion.length > 0) {
             cumpleDuracion = filtros.duracion.some(val => {
-                const semanas = Number(p.duracionSemanas);
-                if (val === "1") return semanas <= 2;
-                if (val === "4") return semanas > 2 && semanas <= 6;
-                if (val === "5") return semanas > 6;
+                if (val === "1") return p.duracionSemanas <= 1;
+                if (val === "4") return p.duracionSemanas > 1 && p.duracionSemanas <= 4;
+                if (val === "5") return p.duracionSemanas > 4;
                 return false;
             });
         }
@@ -98,12 +94,14 @@ async function verDetalles(id) {
     const user = auth.currentUser;
     const btnApply = document.getElementById('btnApply');
 
+    // Resetear botón
     btnApply.innerText = "Postularme ahora";
     btnApply.disabled = false;
     btnApply.style.backgroundColor = "";
     btnApply.style.display = "block";
     btnApply.onclick = handlePostulacion;
 
+    // Resetear/limpiar botón workspace si existía
     const btnWS = document.getElementById('btnWorkspaceModal');
     if (btnWS) btnWS.remove();
 
@@ -123,6 +121,7 @@ async function verDetalles(id) {
         tagsCont.innerHTML = "";
         if (data.tags) data.tags.forEach(t => tagsCont.innerHTML += `<span class="tag">${t}</span>`);
 
+        // Botón "Ver más"
         const modalFooter = document.querySelector('.modal-footer');
         let btnVerMas = document.getElementById('btnVerMas');
         if (!btnVerMas) {
@@ -137,6 +136,7 @@ async function verDetalles(id) {
 
         btnApply.setAttribute('data-id', id);
 
+        // Si hay usuario logueado y es programador, verificar estado de postulación
         if (user) {
             const userSnap = await getDoc(doc(db, "usuarios", user.uid));
             const userData = userSnap.data();
@@ -154,6 +154,7 @@ async function verDetalles(id) {
                     const ambosFirmaron = postulacion.contratoFirmadoEmpresa && postulacion.contratoFirmadoProgramador;
 
                     if (postulacion.estado === 'aceptado' && ambosFirmaron) {
+                        // Workspace activo — botón directo
                         btnApply.style.display = 'none';
                         const btnWorkspace = document.createElement('button');
                         btnWorkspace.id = 'btnWorkspaceModal';
@@ -163,16 +164,19 @@ async function verDetalles(id) {
                         modalFooter.insertBefore(btnWorkspace, modalFooter.firstChild);
 
                     } else if (postulacion.estado === 'aceptado' && !ambosFirmaron) {
+                        // Aceptado pero falta contrato
                         btnApply.innerText = '📄 Ir a firmar el contrato';
                         btnApply.style.backgroundColor = '#10B981';
                         btnApply.onclick = () => window.location.href = `contrato.html?postulacionId=${postulacion.id}`;
 
                     } else if (postulacion.estado === 'pendiente') {
+                        // En revisión
                         btnApply.innerText = '⏳ Postulación en revisión';
                         btnApply.disabled = true;
                         btnApply.style.backgroundColor = '#D97706';
 
                     } else if (postulacion.estado === 'rechazado') {
+                        // Rechazado
                         btnApply.innerText = '❌ Postulación rechazada';
                         btnApply.disabled = true;
                         btnApply.style.backgroundColor = '#DC2626';
@@ -180,6 +184,7 @@ async function verDetalles(id) {
                 }
             }
 
+            // Si es la empresa dueña del proyecto
             if (data.empresaId === user.uid) {
                 btnApply.innerText = '👁️ Tu proyecto publicado';
                 btnApply.disabled = true;
@@ -192,6 +197,7 @@ async function verDetalles(id) {
     } catch (error) { console.error(error); }
 }
 
+// Cerrar Modal
 document.getElementById('closeModal').onclick = () => {
     document.getElementById('projectModal').style.display = "none";
 };
@@ -257,65 +263,6 @@ onAuthStateChanged(auth, async (user) => {
         window.location.href = "index.html";
     }
 });
-
-// --- WORKSPACE EN SIDEBAR ---
-async function cargarWorkspaceSidebar(uid, rol) {
-    const cont = document.getElementById('workspaceList');
-    if (!cont) return;
-
-    try {
-        let postulaciones = [];
-
-        if (rol === 'Programador') {
-            const snap = await getDocs(
-                query(collection(db, "postulaciones"),
-                    where("programadorId", "==", uid),
-                    where("estado", "==", "aceptado"))
-            );
-            postulaciones = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-                .filter(p => p.contratoFirmadoEmpresa && p.contratoFirmadoProgramador
-                          && p.estadoProyecto !== 'completado' && p.estadoProyecto !== 'baja');
-
-        } else {
-            // Empresa: buscar proyectos con programador aceptado y contrato firmado
-            const snapProy = await getDocs(
-                query(collection(db, "proyectos"), where("empresaId", "==", uid))
-            );
-            for (const d of snapProy.docs) {
-                const snapPostu = await getDocs(
-                    query(collection(db, "postulaciones"),
-                        where("proyectoId", "==", d.id),
-                        where("estado", "==", "aceptado"))
-                );
-                snapPostu.docs.forEach(pd => {
-                    const p = { id: pd.id, ...pd.data(), proyectoTitulo: d.data().titulo };
-                    if (p.contratoFirmadoEmpresa && p.contratoFirmadoProgramador
-                        && p.estadoProyecto !== 'completado' && p.estadoProyecto !== 'baja') {
-                        postulaciones.push(p);
-                    }
-                });
-            }
-        }
-
-        if (postulaciones.length === 0) {
-            cont.innerHTML = `<p style="font-size: 12px; color: #999;">Sin proyectos activos.</p>`;
-            return;
-        }
-
-        cont.innerHTML = '';
-        postulaciones.forEach(p => {
-            const btn = document.createElement('button');
-            btn.className = 'btn-workspace-sidebar';
-            btn.innerHTML = `
-                <span class="ws-dot"></span>
-                <span class="ws-titulo">${p.proyectoTitulo || 'Proyecto'}</span>
-                <span class="ws-arrow">→</span>`;
-            btn.onclick = () => window.location.href = `workspace.html?postulacionId=${p.id}`;
-            cont.appendChild(btn);
-        });
-
-    } catch (e) { console.error("Error cargando workspace sidebar:", e); }
-}
 
 // Slider presupuesto
 document.getElementById('budgetRange').addEventListener('input', (e) => {
@@ -421,7 +368,8 @@ async function cargarCandidatosParaEmpresa(empresaId) {
                             <button class="btn-reject" onclick="gestionarPostulacion('${id}', 'rechazado')">✖</button>
                         </div>
                     </div>
-                </div>`;
+                </div>
+            `;
         });
     } catch (e) { console.error("Error cargando candidatos:", e); }
 }
@@ -455,3 +403,89 @@ window.gestionarPostulacion = async (id, nuevoEstado) => {
         alert("Hubo un error al procesar la solicitud.");
     }
 };
+// --- WORKSPACE EN SIDEBAR ---
+// BUG 2 + BUG 3 FIX
+async function cargarWorkspaceSidebar(uid, rol) {
+    const cont = document.getElementById('workspaceList');
+    if (!cont) return;
+
+    try {
+        let postulaciones = [];
+
+        if (rol === 'Programador') {
+            const snap = await getDocs(
+                query(collection(db, "postulaciones"),
+                    where("programadorId", "==", uid),
+                    where("estado", "==", "aceptado"))
+            );
+            postulaciones = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                .filter(p => p.contratoFirmadoEmpresa && p.contratoFirmadoProgramador
+                          && p.estadoProyecto !== 'baja');
+        } else {
+            const snapProy = await getDocs(
+                query(collection(db, "proyectos"), where("empresaId", "==", uid))
+            );
+            for (const d of snapProy.docs) {
+                const snapPostu = await getDocs(
+                    query(collection(db, "postulaciones"),
+                        where("proyectoId", "==", d.id),
+                        where("estado", "==", "aceptado"))
+                );
+                snapPostu.docs.forEach(pd => {
+                    const p = { id: pd.id, ...pd.data(), proyectoTitulo: d.data().titulo };
+                    if (p.contratoFirmadoEmpresa && p.contratoFirmadoProgramador && p.estadoProyecto !== 'baja')
+                        postulaciones.push(p);
+                });
+            }
+        }
+
+        if (postulaciones.length === 0) {
+            cont.innerHTML = `<p style="font-size:12px;color:#999;">Sin proyectos activos.</p>`;
+            return;
+        }
+
+        cont.innerHTML = '';
+        let alguno = false;
+
+        for (const p of postulaciones) {
+            const esCompletado = p.estadoProyecto === 'completado';
+
+            // Verificar si ya valoró
+            let yaValoro = false;
+            if (esCompletado) {
+                const rolKey  = rol === 'Empresa' ? 'empresa' : 'programador';
+                const valSnap = await getDoc(doc(db, "valoraciones", `${p.id}_${rolKey}`));
+                yaValoro = valSnap.exists();
+            }
+
+            // Si ya valoró y el proyecto está completado → no mostrar
+            if (esCompletado && yaValoro) continue;
+
+            alguno = true;
+            const btn = document.createElement('button');
+
+            if (esCompletado && !yaValoro) {
+                btn.className = 'btn-workspace-sidebar';
+                btn.innerHTML = `
+                    <span class="ws-dot" style="background:#F59E0B;"></span>
+                    <span class="ws-titulo">${p.proyectoTitulo || 'Proyecto'}</span>
+                    <span style="font-size:10px;color:#D97706;font-weight:700;white-space:nowrap;">⭐ Valorar</span>`;
+                btn.onclick = () => window.location.href = `valoracion.html?postulacionId=${p.id}`;
+            } else {
+                btn.className = 'btn-workspace-sidebar';
+                btn.innerHTML = `
+                    <span class="ws-dot"></span>
+                    <span class="ws-titulo">${p.proyectoTitulo || 'Proyecto'}</span>
+                    <span class="ws-arrow">→</span>`;
+                btn.onclick = () => window.location.href = `workspace.html?postulacionId=${p.id}`;
+            }
+
+            cont.appendChild(btn);
+        }
+
+        if (!alguno) {
+            cont.innerHTML = `<p style="font-size:12px;color:#999;">Sin proyectos activos.</p>`;
+        }
+
+    } catch (e) { console.error("Error cargando workspace sidebar:", e); }
+}

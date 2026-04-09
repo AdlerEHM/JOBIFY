@@ -648,3 +648,36 @@
 .tarea-estado-badge.no-iniciada { background: #F1F5F9; color: var(--text-muted); }
 .tarea-estado-badge.en-proceso  { background: #FEF3C7; color: #D97706; }
 .tarea-estado-badge.finalizada  { background: #D1FAE5; color: #059669; }
+/* ─── TAB FINALIZAR ─── */
+.finalizar-layout {
+    padding: 32px;
+    max-width: 620px;
+    margin: 0 auto;
+    overflow-y: auto;
+    height: calc(100vh - 64px - 49px);
+}
+
+/* ─── CHAT EXPIRADO ─── */
+.chat-expirado {
+    padding: 12px 24px;
+    background: #FEF3C7;
+    border-top: 1px solid #FDE68A;
+    font-size: 13px;
+    font-weight: 600;
+    color: #D97706;
+    text-align: center;
+}
+
+/* ─── BOTÓN IR A VALORAR ─── */
+.btn-ir-valorar {
+    padding: 12px 28px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-ir-valorar:hover { background: #4338CA; transform: translateY(-1px); }

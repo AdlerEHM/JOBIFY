@@ -33,7 +33,6 @@ let proyectoData    = null;
 let usuarioActual   = null;
 let rolActual       = null;
 let archivoChat     = null;
-let unsubChat       = null;
 
 // ─── INICIO ───
 onAuthStateChanged(auth, async (user) => {
@@ -58,9 +57,9 @@ onAuthStateChanged(auth, async (user) => {
     proyectoData = proySnap.exists() ? proySnap.data() : {};
 
     const userSnap = await getDoc(doc(db, "usuarios", user.uid));
-    const userData = userSnap.data();
-    rolActual = userData.rol;
+    rolActual = userSnap.data().rol;
 
+    // Cargar nombre empresa para valoraciones
     if (!proyectoData.empresaNombre && postulacionData.empresaId) {
         const empSnap = await getDoc(doc(db, "usuarios", postulacionData.empresaId));
         if (empSnap.exists()) proyectoData.empresaNombre = empSnap.data().nombre;
@@ -103,28 +102,43 @@ function configurarTabs() {
 
 // ─── CHAT ───
 function iniciarChat() {
+    const proyectoCompletado = postulacionData.estadoProyecto === 'completado';
+
+    // Calcular expiración del chat
+    let chatExpirado = false;
     if (proyectoData?.duracionSemanas && postulacionData.fechaInicio) {
-        const inicio = new Date(postulacionData.fechaInicio);
-        const diasProyecto = proyectoData.duracionSemanas * 7;
-        const expiry = new Date(inicio.getTime() + (diasProyecto + 7) * 86400000);
+        const inicio      = new Date(postulacionData.fechaInicio);
+        const diasProy    = proyectoData.duracionSemanas * 7;
+        const expiry      = new Date(inicio.getTime() + (diasProy + 7) * 86400000);
         document.getElementById('chatExpiry').innerText = expiry.toLocaleDateString('es-MX', {
             day: '2-digit', month: 'long', year: 'numeric'
         });
+        chatExpirado = new Date() > expiry;
     } else {
-        document.getElementById('chatExpiry').innerText = 'Según duración del proyecto + 7 días';
+        document.getElementById('chatExpiry').innerText = 'Duración del proyecto + 7 días';
     }
 
+    // BUG 4 FIX: deshabilitar input si el chat expiró
+    const inputArea = document.getElementById('chatInputArea');
+    if (chatExpirado) {
+        inputArea.innerHTML = `
+            <div class="chat-expirado">
+                🔒 El chat de este proyecto ha expirado.
+            </div>`;
+    }
+
+    // Mensajes en tiempo real
     const msgsRef = collection(db, "postulaciones", postulacionId, "mensajes");
     const q = query(msgsRef, orderBy("fecha", "asc"));
 
-    unsubChat = onSnapshot(q, (snap) => {
+    onSnapshot(q, (snap) => {
         const container = document.getElementById('chatMessages');
         container.innerHTML = "";
         let lastDate = "";
 
         snap.forEach(docSnap => {
-            const msg    = docSnap.data();
-            const esMio  = msg.autorId === usuarioActual.uid;
+            const msg      = docSnap.data();
+            const esMio    = msg.autorId === usuarioActual.uid;
             const fechaMsg = msg.fecha?.toDate ? msg.fecha.toDate() : new Date(msg.fecha);
             const fechaStr = fechaMsg.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
 
@@ -155,8 +169,11 @@ function iniciarChat() {
             }
             container.appendChild(bubble);
         });
+
         container.scrollTop = container.scrollHeight;
     });
+
+    if (chatExpirado) return; // No conectar eventos si chat expirado
 
     const input = document.getElementById('chatInput');
     input.addEventListener('keydown', (e) => {
@@ -230,8 +247,8 @@ function iniciarCalendario() {
 }
 
 function renderizarPlan(plan) {
-    const hitos = plan.hitos || [];
-    const estado = plan.estado || 'borrador';
+    const hitos       = plan.hitos || [];
+    const estado      = plan.estado || 'borrador';
     const planBloqueado = estado === 'aceptado';
 
     const estadoEl = document.getElementById('planEstado');
@@ -264,7 +281,7 @@ function renderizarPlan(plan) {
                 <div class="hito-dot ${dotClass}"></div>
                 <div class="hito-info">
                     <div class="hito-nombre">${hito.nombre}</div>
-                    <div class="hito-fecha">${new Date(hito.fecha).toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                    <div class="hito-fecha">${fechaHito.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
                 </div>
                 ${!planBloqueado ? `<button class="btn-eliminar-hito" data-index="${i}">🗑️</button>` : ''}`;
             lista.appendChild(item);
@@ -313,7 +330,6 @@ async function agregarHito() {
     const nombre = document.getElementById('hitoNombre').value.trim();
     const fecha  = document.getElementById('hitoFecha').value;
     if (!nombre || !fecha) return alert("Completa el nombre y la fecha del hito.");
-
     const planRef = doc(db, "postulaciones", postulacionId, "plan", "datos");
     const snap = await getDoc(planRef);
     const planActual = snap.exists() ? snap.data() : { hitos: [], estado: 'borrador' };

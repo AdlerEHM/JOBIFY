@@ -10,7 +10,6 @@
 </head>
 <body>
 
-    <!-- TOP BAR -->
     <header class="top-bar">
         <button class="btn-back" onclick="window.location.href='dashboard.html'">← Volver</button>
         <div class="top-bar-center">
@@ -19,31 +18,30 @@
         </div>
         <div class="top-bar-right">
             <span id="roleBadge" class="role-badge">...</span>
-            <button id="btnContrato" class="btn-contrato" onclick="window.location.href='contrato.html?postulacionId=' + postulacionIdGlobal">
+            <button id="btnContrato" class="btn-contrato"
+                onclick="window.location.href='contrato.html?postulacionId=' + postulacionIdGlobal">
                 📄 Ver Contrato
             </button>
         </div>
     </header>
 
-    <!-- LOADING -->
     <div id="loadingState" class="loading-state">
         <div class="spinner"></div>
         <p>Cargando workspace...</p>
     </div>
 
-    <!-- CHAT BLOQUEADO -->
     <div id="chatBloqueado" class="chat-bloqueado" style="display:none;">
         <div class="bloqueado-box">
             <span class="lock-icon">🔒</span>
             <h3>Chat no disponible aún</h3>
             <p>El chat se habilita cuando <strong>ambas partes</strong> firmen el contrato.</p>
-            <button class="btn-main" onclick="window.location.href='contrato.html?postulacionId=' + postulacionIdGlobal">
+            <button class="btn-main"
+                onclick="window.location.href='contrato.html?postulacionId=' + postulacionIdGlobal">
                 📄 Ir a firmar el contrato
             </button>
         </div>
     </div>
 
-    <!-- WORKSPACE PRINCIPAL -->
     <main id="workspaceMain" class="workspace-main" style="display:none;">
 
         <!-- TABS -->
@@ -51,36 +49,33 @@
             <button class="tab-btn active" data-tab="chat">💬 Chat</button>
             <button class="tab-btn" data-tab="calendario">📅 Calendario</button>
             <button class="tab-btn" data-tab="tareas">✅ Tareas</button>
+            <!-- Tab finalizar: visible siempre, cambia estado según progreso -->
+            <button class="tab-btn" data-tab="finalizar" id="tabFinalizar">🏁 Finalizar</button>
+            <!-- Tab valorar: solo visible cuando ambos confirmaron -->
             <button class="tab-btn" data-tab="valorar" id="tabValorar" style="display:none;">⭐ Valorar</button>
         </div>
 
         <!-- TAB: CHAT -->
         <div class="tab-content active" id="tab-chat">
             <div class="chat-layout">
-
                 <div class="chat-messages" id="chatMessages">
                     <div class="chat-loading">Cargando mensajes...</div>
                 </div>
-
-                <div class="chat-input-bar">
-                    <div class="chat-input-wrapper">
-                        <label class="btn-attach" title="Adjuntar archivo">
-                            📎
-                            <input type="file" id="chatFileInput" style="display:none;"
-                                accept=".pdf,.zip,.rar,.js,.py,.java,.php,.html,.css,.ts,.cpp,.c,.docx,.txt,.png,.jpg,.svg,.webp">
-                        </label>
-                        <textarea id="chatInput" placeholder="Escribe un mensaje..." rows="1" maxlength="2000"></textarea>
-                        <button id="btnSendMsg" class="btn-send">➤</button>
+                <div id="chatInputArea">
+                    <div class="chat-input-bar">
+                        <div class="chat-input-wrapper">
+                            <label class="btn-attach" title="Adjuntar archivo">
+                                📎
+                                <input type="file" id="chatFileInput" style="display:none;"
+                                    accept=".pdf,.zip,.rar,.js,.py,.java,.php,.html,.css,.ts,.cpp,.c,.docx,.txt,.png,.jpg,.svg,.webp">
+                            </label>
+                            <textarea id="chatInput" placeholder="Escribe un mensaje..." rows="1" maxlength="2000"></textarea>
+                            <button id="btnSendMsg" class="btn-send">➤</button>
+                        </div>
+                        <div id="filePreview" class="file-preview" style="display:none;"></div>
+                        <small class="chat-info">Chat activo hasta: <span id="chatExpiry">-</span></small>
                     </div>
-                    <div id="filePreview" class="file-preview" style="display:none;"></div>
-                    <small class="chat-info">Chat activo hasta: <span id="chatExpiry">-</span></small>
                 </div>
-
-                <!-- PANEL COMPLETAR PROYECTO (ambos roles) -->
-                <div id="panelCompletar" style="display:none; padding: 12px 24px; background: white; border-top: 1px solid var(--border);">
-                    <!-- Se rellena dinámicamente según estado -->
-                </div>
-
             </div>
         </div>
 
@@ -125,6 +120,13 @@
                 <div id="listaTareas" class="lista-tareas">
                     <p class="empty-msg">No hay tareas aún.</p>
                 </div>
+            </div>
+        </div>
+
+        <!-- TAB: FINALIZAR -->
+        <div class="tab-content" id="tab-finalizar">
+            <div class="finalizar-layout">
+                <div id="panelCompletar"></div>
             </div>
         </div>
 

@@ -1,4 +1,4 @@
-import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc }
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, onSnapshot }
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ─── ETIQUETAS ────────────────────────────────────────────────────────────
@@ -44,38 +44,61 @@ const DESCRIPCIONES_ESTRELLAS = {
 
 // ─── INICIAR MÓDULO ───────────────────────────────────────────────────────
 export async function iniciarValoraciones(db, postulacionId, postulacionData, proyectoData, usuarioActual, rolActual) {
-    const esEmpresa  = rolActual === 'Empresa';
-    const esProgram  = rolActual === 'Programador';
+    const esEmpresa = rolActual === 'Empresa';
 
-    // Estados de completado
-    const completadoEmpresa      = !!postulacionData.completadoEmpresa;
-    const completadoProgramador  = !!postulacionData.completadoProgramador;
-    const ambosCompletaron       = completadoEmpresa && completadoProgramador;
+    // BUG 5 FIX: escuchar cambios en tiempo real con onSnapshot
+    // para que el panel se actualice cuando la otra parte confirma
+    const postuRef = doc(db, "postulaciones", postulacionId);
 
-    // Si ambos ya confirmaron → activar tab y valoraciones
-    if (ambosCompletaron) {
+    onSnapshot(postuRef, (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+
+        const completadoEmpresa     = !!data.completadoEmpresa;
+        const completadoProgramador = !!data.completadoProgramador;
+        const ambosCompletaron      = completadoEmpresa && completadoProgramador;
+
+        // Actualizar tab Valorar
         const tabValorar = document.getElementById('tabValorar');
-        if (tabValorar) tabValorar.style.display = 'block';
-        renderizarTabValorar(db, postulacionId, postulacionData, proyectoData, usuarioActual, rolActual);
-    }
+        if (tabValorar) tabValorar.style.display = ambosCompletaron ? 'block' : 'none';
 
-    // Renderizar panel de completar en el chat
-    renderizarPanelCompletar(db, postulacionId, postulacionData, usuarioActual,
-        esEmpresa, esProgram, completadoEmpresa, completadoProgramador, ambosCompletaron);
+        // Actualizar tab Finalizar badge
+        const tabFinalizar = document.getElementById('tabFinalizar');
+        if (tabFinalizar) {
+            if (ambosCompletaron) {
+                tabFinalizar.innerText = '✅ Finalizado';
+            } else if ((esEmpresa && completadoEmpresa) || (!esEmpresa && completadoProgramador)) {
+                tabFinalizar.innerText = '⏳ Esperando...';
+            } else {
+                tabFinalizar.innerText = '🏁 Finalizar';
+            }
+        }
+
+        // Renderizar panel completar
+        renderizarPanelCompletar(db, postulacionId, data, usuarioActual, esEmpresa,
+            completadoEmpresa, completadoProgramador, ambosCompletaron);
+
+        // Renderizar tab valorar si ya completaron
+        if (ambosCompletaron) {
+            renderizarTabValorar(db, postulacionId, data, proyectoData, usuarioActual, rolActual);
+        }
+    });
 }
 
-// ─── PANEL COMPLETAR ──────────────────────────────────────────────────────
+// ─── PANEL COMPLETAR (Tab Finalizar) ─────────────────────────────────────
 function renderizarPanelCompletar(db, postulacionId, postulacionData, usuarioActual,
-    esEmpresa, esProgram, completadoEmpresa, completadoProgramador, ambosCompletaron) {
+    esEmpresa, completadoEmpresa, completadoProgramador, ambosCompletaron) {
 
     const panel = document.getElementById('panelCompletar');
     if (!panel) return;
 
-    panel.style.display = 'block';
     panel.innerHTML = '';
 
+    const yoConfirme   = esEmpresa ? completadoEmpresa : completadoProgramador;
+    const otroConfirmo = esEmpresa ? completadoProgramador : completadoEmpresa;
+    const otroRol      = esEmpresa ? 'El programador' : 'La empresa';
+
     if (ambosCompletaron) {
-        // Ambos confirmaron
         panel.innerHTML = `
             <div class="completar-box completado">
                 <span>🎉</span>
@@ -83,30 +106,28 @@ function renderizarPanelCompletar(db, postulacionId, postulacionData, usuarioAct
                     <strong>¡Proyecto completado!</strong>
                     <p>Ambas partes confirmaron la finalización. Ve al tab <strong>⭐ Valorar</strong> para calificar la experiencia.</p>
                 </div>
+            </div>
+            <div style="margin-top:20px; text-align:center;">
+                <button class="btn-ir-valorar" onclick="document.querySelector('[data-tab=valorar]').click()">
+                    ⭐ Ir a Valorar
+                </button>
             </div>`;
         return;
     }
 
-    // Determinar si YO ya confirmé
-    const yoConfirme = esEmpresa ? completadoEmpresa : completadoProgramador;
-    const otroConfirmo = esEmpresa ? completadoProgramador : completadoEmpresa;
-    const otroRol = esEmpresa ? 'El programador' : 'La empresa';
-
     if (yoConfirme && !otroConfirmo) {
-        // Yo ya confirmé, esperando al otro
         panel.innerHTML = `
             <div class="completar-box esperando">
                 <span>⏳</span>
                 <div>
-                    <strong>Esperando confirmación</strong>
-                    <p>${otroRol} aún no ha confirmado que el proyecto está completado.</p>
+                    <strong>Confirmación enviada</strong>
+                    <p>${otroRol} aún no ha confirmado que el proyecto está completado. Se le notificará.</p>
                 </div>
             </div>`;
         return;
     }
 
     if (!yoConfirme && otroConfirmo) {
-        // El otro ya confirmó, me toca a mí
         panel.innerHTML = `
             <div class="completar-box pendiente-yo">
                 <span>👋</span>
@@ -129,7 +150,7 @@ function renderizarPanelCompletar(db, postulacionId, postulacionData, usuarioAct
             <span>🏁</span>
             <div>
                 <strong>¿El proyecto ha finalizado?</strong>
-                <p>Cuando ambas partes confirmen, se habilitará el sistema de valoraciones.</p>
+                <p>Cuando ambas partes confirmen, se habilitará el sistema de valoraciones y el proyecto pasará al historial.</p>
             </div>
             <button id="btnProponerCompleto" class="btn-completar-proyecto">
                 🎉 Marcar como completado
@@ -141,38 +162,33 @@ function renderizarPanelCompletar(db, postulacionId, postulacionData, usuarioAct
 
 // ─── CONFIRMAR COMPLETADO ─────────────────────────────────────────────────
 async function confirmarCompletado(db, postulacionId, postulacionData, esEmpresa, usuarioActual) {
-    const campo = esEmpresa ? 'completadoEmpresa' : 'completadoProgramador';
+    const campo     = esEmpresa ? 'completadoEmpresa' : 'completadoProgramador';
     const otroCampo = esEmpresa ? 'completadoProgramador' : 'completadoEmpresa';
-    const otroId = esEmpresa ? postulacionData.programadorId : postulacionData.empresaId;
+    const otroId    = esEmpresa ? postulacionData.programadorId : postulacionData.empresaId;
 
     try {
-        const update = { [campo]: true };
-
-        // Verificar si el otro ya confirmó para marcar completado total
         const postuSnap = await getDoc(doc(db, "postulaciones", postulacionId));
         const postuData = postuSnap.data();
+        const update    = { [campo]: true };
 
         if (postuData[otroCampo]) {
-            // El otro ya confirmó → ambos completaron
-            update.estadoProyecto = 'completado';
+            // El otro ya confirmó → proyecto completado
+            update.estadoProyecto  = 'completado';
             update.fechaCompletado = new Date().toISOString();
         }
 
         await updateDoc(doc(db, "postulaciones", postulacionId), update);
 
-        // Notificar a la otra parte
         const mensaje = postuData[otroCampo]
-            ? `¡El proyecto "${postulacionData.proyectoTitulo}" ha sido completado por ambas partes! Ya pueden valorarse.`
-            : `${esEmpresa ? 'La empresa' : 'El programador'} marcó el proyecto "${postulacionData.proyectoTitulo}" como completado. ¡Confirma para activar las valoraciones!`;
+            ? `¡El proyecto "${postulacionData.proyectoTitulo}" fue completado por ambas partes! Ya pueden valorarse.`
+            : `${esEmpresa ? 'La empresa' : 'El programador'} marcó el proyecto "${postulacionData.proyectoTitulo}" como completado. ¡Confirma para finalizar!`;
 
         await addDoc(collection(db, "notificaciones"), {
-            para:    otroId,
-            mensaje,
-            fecha:   new Date().toISOString(),
-            leido:   false
+            para: otroId, mensaje,
+            fecha: new Date().toISOString(), leido: false
         });
 
-        window.location.reload();
+        // No recargamos — onSnapshot actualizará la UI automáticamente
 
     } catch (e) {
         alert("Error: " + e.message);
@@ -188,23 +204,25 @@ async function renderizarTabValorar(db, postulacionId, postulacionData, proyecto
     const miValoracionId = `${postulacionId}_${esEmpresa ? 'empresa' : 'programador'}`;
     const suValoracionId = `${postulacionId}_${esEmpresa ? 'programador' : 'empresa'}`;
 
-    const miValSnap = await getDoc(doc(db, "valoraciones", miValoracionId));
-    const suValSnap = await getDoc(doc(db, "valoraciones", suValoracionId));
+    const [miValSnap, suValSnap] = await Promise.all([
+        getDoc(doc(db, "valoraciones", miValoracionId)),
+        getDoc(doc(db, "valoraciones", suValoracionId))
+    ]);
 
     const miValoracion = miValSnap.exists() ? miValSnap.data() : null;
     const suValoracion = suValSnap.exists() ? suValSnap.data() : null;
 
-    const etiquetas = esEmpresa
-        ? ETIQUETAS_EMPRESA_A_PROGRAMADOR
-        : ETIQUETAS_PROGRAMADOR_A_EMPRESA;
+    // Evitar re-renderizar si ya está bien pintado
+    if (cont.dataset.rendered === miValoracionId) return;
+    cont.dataset.rendered = miValoracionId;
+    cont.innerHTML = '';
 
+    const etiquetas     = esEmpresa ? ETIQUETAS_EMPRESA_A_PROGRAMADOR : ETIQUETAS_PROGRAMADOR_A_EMPRESA;
     const nombreValuado = esEmpresa
         ? postulacionData.nombreProgramador
         : (proyectoData?.empresaNombre || 'la empresa');
 
-    cont.innerHTML = '';
-
-    // Banner completado
+    // Banner
     const banner = document.createElement('div');
     banner.className = 'proyecto-completado-banner';
     banner.innerHTML = `
@@ -214,7 +232,6 @@ async function renderizarTabValorar(db, postulacionId, postulacionData, proyecto
     cont.appendChild(banner);
 
     if (miValoracion) {
-        // Ya valoré
         const yaVal = document.createElement('div');
         yaVal.className = 'ya-valorado';
         yaVal.innerHTML = `
@@ -223,7 +240,6 @@ async function renderizarTabValorar(db, postulacionId, postulacionData, proyecto
             <p>Gracias por tu retroalimentación.</p>`;
         cont.appendChild(yaVal);
     } else {
-        // Mostrar formulario
         cont.appendChild(crearFormulario(
             db, postulacionId, postulacionData,
             usuarioActual, rolActual, miValoracionId,
@@ -231,25 +247,22 @@ async function renderizarTabValorar(db, postulacionId, postulacionData, proyecto
         ));
     }
 
-    // Mostrar valoración recibida si ya la enviaron
     if (suValoracion) {
         const recibida = document.createElement('div');
         recibida.className = 'valoracion-recibida';
-        const estrellas = '⭐'.repeat(suValoracion.estrellas) + '☆'.repeat(5 - suValoracion.estrellas);
+        const estrellas     = '⭐'.repeat(suValoracion.estrellas) + '☆'.repeat(5 - suValoracion.estrellas);
         const etiquetasHTML = (suValoracion.etiquetas || [])
             .map(e => `<span class="val-etiqueta ${e.tipo}">${e.texto}</span>`).join('');
         recibida.innerHTML = `
             <h4>⭐ Valoración que recibiste</h4>
             <div class="val-estrellas">${estrellas} (${suValoracion.estrellas}/5)</div>
             ${etiquetasHTML ? `<div class="val-etiquetas">${etiquetasHTML}</div>` : ''}
-            ${suValoracion.comentario
-                ? `<div class="val-comentario">"${suValoracion.comentario}"</div>`
-                : ''}`;
+            ${suValoracion.comentario ? `<div class="val-comentario">"${suValoracion.comentario}"</div>` : ''}`;
         cont.appendChild(recibida);
     }
 }
 
-// ─── FORMULARIO DE VALORACIÓN ─────────────────────────────────────────────
+// ─── FORMULARIO ───────────────────────────────────────────────────────────
 function crearFormulario(db, postulacionId, postulacionData, usuarioActual, rolActual, valoracionId, etiquetas, nombreValuado) {
     const form = document.createElement('div');
     form.className = 'valoracion-form';
@@ -295,12 +308,10 @@ function crearFormulario(db, postulacionId, postulacionData, usuarioActual, rolA
                 placeholder="Comparte tu experiencia trabajando con ${nombreValuado}..."></textarea>
         </div>
 
-        <button class="btn-enviar-valoracion" id="btnEnviarVal" disabled>
-            Enviar valoración
-        </button>`;
+        <button class="btn-enviar-valoracion" id="btnEnviarVal" disabled>Enviar valoración</button>`;
 
     // Estrellas
-    const stars = form.querySelectorAll('.star-btn');
+    const stars     = form.querySelectorAll('.star-btn');
     const starsDesc = form.querySelector('#starsDesc');
 
     stars.forEach(btn => {
@@ -326,13 +337,8 @@ function crearFormulario(db, postulacionId, postulacionData, usuarioActual, rolA
             const texto = chip.getAttribute('data-texto');
             const tipo  = chip.getAttribute('data-tipo');
             const idx   = etiquetasSeleccionadas.findIndex(e => e.texto === texto);
-            if (idx >= 0) {
-                etiquetasSeleccionadas.splice(idx, 1);
-                chip.classList.remove('selected');
-            } else {
-                etiquetasSeleccionadas.push({ texto, tipo });
-                chip.classList.add('selected');
-            }
+            if (idx >= 0) { etiquetasSeleccionadas.splice(idx, 1); chip.classList.remove('selected'); }
+            else          { etiquetasSeleccionadas.push({ texto, tipo }); chip.classList.add('selected'); }
         });
     });
 
@@ -346,27 +352,24 @@ function crearFormulario(db, postulacionId, postulacionData, usuarioActual, rolA
         try {
             const esEmpresa  = rolActual === 'Empresa';
             const comentario = form.querySelector('#comentarioVal').value.trim();
+            const valuadoId  = esEmpresa ? postulacionData.programadorId : postulacionData.empresaId;
 
             await setDoc(doc(db, "valoraciones", valoracionId), {
                 postulacionId,
                 proyectoId:  postulacionData.proyectoId,
                 autorId:     usuarioActual.uid,
                 autorRol:    rolActual,
-                valuadoId:   esEmpresa ? postulacionData.programadorId : postulacionData.empresaId,
+                valuadoId,
                 estrellas:   estrellaSeleccionada,
                 etiquetas:   etiquetasSeleccionadas,
                 comentario,
                 fecha:       new Date().toISOString()
             });
 
-            await actualizarReputacion(
-                db,
-                esEmpresa ? postulacionData.programadorId : postulacionData.empresaId,
-                estrellaSeleccionada
-            );
+            await actualizarReputacion(db, valuadoId, estrellaSeleccionada);
 
             await addDoc(collection(db, "notificaciones"), {
-                para:    esEmpresa ? postulacionData.programadorId : postulacionData.empresaId,
+                para:    valuadoId,
                 mensaje: `Recibiste una valoración de ${estrellaSeleccionada} ⭐ por el proyecto "${postulacionData.proyectoTitulo}".`,
                 fecha:   new Date().toISOString(),
                 leido:   false
@@ -391,10 +394,10 @@ async function actualizarReputacion(db, usuarioId, nuevaEstrellas) {
         const userRef  = doc(db, "usuarios", usuarioId);
         const userSnap = await getDoc(userRef);
         if (!userSnap.exists()) return;
-        const userData     = userSnap.data();
-        const repActual    = userData.reputacion   || 5;
-        const totalValores = userData.totalValores || 0;
-        const nuevoTotal   = totalValores + 1;
+        const ud            = userSnap.data();
+        const repActual     = ud.reputacion   || 5;
+        const totalValores  = ud.totalValores || 0;
+        const nuevoTotal    = totalValores + 1;
         const nuevoPromedio = ((repActual * totalValores) + nuevaEstrellas) / nuevoTotal;
         await updateDoc(userRef, {
             reputacion:   Math.round(nuevoPromedio * 10) / 10,
