@@ -6,6 +6,7 @@
     <title>Jobify - Workspace</title>
     <link rel="stylesheet" href="global.css">
     <link rel="stylesheet" href="workspace.css">
+    <link rel="stylesheet" href="valoracion.css">
 </head>
 <body>
 
@@ -30,7 +31,7 @@
         <p>Cargando workspace...</p>
     </div>
 
-    <!-- CHAT BLOQUEADO (sin contrato firmado) -->
+    <!-- CHAT BLOQUEADO -->
     <div id="chatBloqueado" class="chat-bloqueado" style="display:none;">
         <div class="bloqueado-box">
             <span class="lock-icon">🔒</span>
@@ -50,55 +51,47 @@
             <button class="tab-btn active" data-tab="chat">💬 Chat</button>
             <button class="tab-btn" data-tab="calendario">📅 Calendario</button>
             <button class="tab-btn" data-tab="tareas">✅ Tareas</button>
+            <button class="tab-btn" data-tab="valorar" id="tabValorar" style="display:none;">⭐ Valorar</button>
         </div>
 
         <!-- TAB: CHAT -->
         <div class="tab-content active" id="tab-chat">
             <div class="chat-layout">
 
-                <!-- MENSAJES -->
                 <div class="chat-messages" id="chatMessages">
                     <div class="chat-loading">Cargando mensajes...</div>
                 </div>
 
-                <!-- INPUT DE MENSAJE -->
                 <div class="chat-input-bar">
                     <div class="chat-input-wrapper">
-                        <!-- Botón adjuntar archivo -->
                         <label class="btn-attach" title="Adjuntar archivo">
                             📎
                             <input type="file" id="chatFileInput" style="display:none;"
                                 accept=".pdf,.zip,.rar,.js,.py,.java,.php,.html,.css,.ts,.cpp,.c,.docx,.txt,.png,.jpg,.svg,.webp">
                         </label>
-
-                        <textarea 
-                            id="chatInput" 
-                            placeholder="Escribe un mensaje..." 
-                            rows="1"
-                            maxlength="2000">
-                        </textarea>
-
+                        <textarea id="chatInput" placeholder="Escribe un mensaje..." rows="1" maxlength="2000"></textarea>
                         <button id="btnSendMsg" class="btn-send">➤</button>
                     </div>
                     <div id="filePreview" class="file-preview" style="display:none;"></div>
                     <small class="chat-info">Chat activo hasta: <span id="chatExpiry">-</span></small>
                 </div>
+
+                <!-- PANEL COMPLETAR PROYECTO (ambos roles) -->
+                <div id="panelCompletar" style="display:none; padding: 12px 24px; background: white; border-top: 1px solid var(--border);">
+                    <!-- Se rellena dinámicamente según estado -->
+                </div>
+
             </div>
         </div>
 
         <!-- TAB: CALENDARIO -->
         <div class="tab-content" id="tab-calendario">
             <div class="calendario-layout">
-
                 <div class="calendario-header">
                     <h3>📅 Plan de Trabajo</h3>
                     <p class="cal-subtitle">Define los hitos del proyecto. Una vez aceptado por ambas partes, el calendario queda bloqueado.</p>
                 </div>
-
-                <!-- Estado del plan -->
                 <div id="planEstado" class="plan-estado"></div>
-
-                <!-- Formulario para agregar hito (solo visible si el plan no está bloqueado) -->
                 <div id="formHito" class="form-hito">
                     <h4>Agregar Hito</h4>
                     <div class="hito-inputs">
@@ -107,27 +100,19 @@
                         <button id="btnAgregarHito" class="btn-agregar-hito">+ Agregar</button>
                     </div>
                 </div>
-
-                <!-- Lista de hitos -->
                 <div id="listaHitos" class="lista-hitos"></div>
-
-                <!-- Botones de acción del plan -->
                 <div id="accionesPlan" class="acciones-plan" style="display:none;"></div>
-
             </div>
         </div>
 
         <!-- TAB: TAREAS -->
         <div class="tab-content" id="tab-tareas">
             <div class="tareas-layout">
-
                 <div class="tareas-header">
                     <h3>✅ Checklist de Tareas</h3>
                     <p class="tareas-subtitle">Seguimiento de actividades del proyecto.</p>
                     <button id="btnNuevaTarea" class="btn-nueva-tarea">+ Nueva Tarea</button>
                 </div>
-
-                <!-- Formulario nueva tarea (oculto por defecto) -->
                 <div id="formNuevaTarea" class="form-nueva-tarea" style="display:none;">
                     <input type="text" id="tareaDesc" placeholder="Descripción de la tarea">
                     <input type="text" id="tareaObjetivo" placeholder="Objetivo o resultado esperado">
@@ -137,12 +122,16 @@
                         <button id="btnCancelarTarea" class="btn-cancelar-tarea">Cancelar</button>
                     </div>
                 </div>
-
-                <!-- Lista de tareas -->
                 <div id="listaTareas" class="lista-tareas">
                     <p class="empty-msg">No hay tareas aún.</p>
                 </div>
+            </div>
+        </div>
 
+        <!-- TAB: VALORAR -->
+        <div class="tab-content" id="tab-valorar">
+            <div class="valorar-layout">
+                <div id="valorarContenido"></div>
             </div>
         </div>
 

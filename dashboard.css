@@ -1,4 +1,4 @@
-/* Layout Principal con márgenes correctos */
+/* Layout Principal */
 .app-container { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
 .top-bar {
@@ -11,7 +11,6 @@
     position: sticky; top: 0; z-index: 100;
 }
 
-/* Badge de Rol (Programador vs Empresa) */
 .role-badge {
     padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 13px;
     text-transform: uppercase; letter-spacing: 0.5px;
@@ -33,44 +32,72 @@
 .filter-title { font-size: 18px; margin-bottom: 10px; color: var(--text-main); }
 .group-label { font-size: 12px; font-weight: bold; color: #888; text-transform: uppercase; margin-bottom: 12px; }
 
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
+.filter-group { display: flex; flex-direction: column; gap: 12px; }
 
 .filter-group label {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    padding: 4px 0;
+    display: flex; align-items: center; gap: 12px;
+    font-size: 14px; font-weight: 500; color: var(--text-muted);
+    cursor: pointer; transition: all 0.2s ease; padding: 4px 0;
 }
-
 .filter-group label:hover { color: var(--primary); }
 
 .filter-group input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: var(--primary);
+    width: 18px; height: 18px;
+    cursor: pointer; accent-color: var(--primary);
 }
 
 .slider {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 6px;
-    background: #E2E8F0;
-    border-radius: 5px;
-    outline: none;
-    accent-color: var(--primary);
-    margin-top: 10px;
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 6px;
+    background: #E2E8F0; border-radius: 5px;
+    outline: none; accent-color: var(--primary); margin-top: 10px;
 }
+
+/* ─── WORKSPACE SIDEBAR ─── */
+.btn-workspace-sidebar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--primary-light);
+    border: 1.5px solid var(--primary);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 8px;
+    transition: all 0.2s;
+    text-align: left;
+}
+.btn-workspace-sidebar:hover {
+    background: var(--primary);
+    color: white;
+}
+.btn-workspace-sidebar:hover .ws-dot { background: white; }
+
+.ws-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #10B981;
+    flex-shrink: 0;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.ws-titulo {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ws-arrow { font-size: 14px; flex-shrink: 0; }
 
 /* Grid de proyectos */
 .content-area { flex: 1; padding: 40px; overflow-y: auto; background-color: #F8F9FA; }
@@ -83,9 +110,7 @@
 
 /* Tarjeta */
 .project-card {
-    background: white; 
-    border-radius: 16px; 
-    padding: 28px;
+    background: white; border-radius: 16px; padding: 28px;
     border: 1px solid var(--border); 
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -96,33 +121,15 @@
     border-color: var(--primary);
 }
 
-.company-info h4 {
-    font-size: 17px;
-    font-weight: 700;
-    color: var(--text-main);
-    margin-bottom: 4px;
-}
+.company-info h4 { font-size: 17px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+.company-info span { font-size: 14px; font-weight: 600; color: var(--secondary); }
 
-.company-info span {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--secondary);
-}
-
-.card-tags {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-}
+.card-tags { display: flex; gap: 8px; margin-top: 10px; }
 
 .tag {
-    background: var(--primary-light);
-    color: var(--primary);
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
+    background: var(--primary-light); color: var(--primary);
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
 }
 
 .btn-publish {
@@ -145,39 +152,27 @@
 }
 .btn-misproyectos:hover { background: var(--primary-light); }
 
-/* User actions */
-.user-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
+.user-actions { display: flex; align-items: center; gap: 12px; }
 
-/* Contenedor relativo para posicionar el dropdown */
+/* Dropdown perfil */
 .profile-container-nav { position: relative; }
 
 .profile-trigger {
     width: 40px; height: 40px;
     background-color: var(--primary);
-    border-radius: 50%;
-    cursor: pointer;
-    overflow: hidden;
+    border-radius: 50%; cursor: pointer; overflow: hidden;
     display: flex; justify-content: center; align-items: center;
     color: white; font-weight: bold;
 }
-
 .profile-trigger img { width: 100%; height: 100%; object-fit: cover; }
 
-/* Menú Desplegable */
 .profile-dropdown {
     position: absolute; top: 55px; right: 0;
     width: 280px; background: white;
     border-radius: 20px; border: 1px solid var(--border);
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    display: none;
-    z-index: 1000; padding: 20px;
-    text-align: center;
+    display: none; z-index: 1000; padding: 20px; text-align: center;
 }
-
 .profile-dropdown.active { display: block; }
 
 .dropdown-header { padding-bottom: 15px; border-bottom: 1px solid #eee; }
@@ -209,15 +204,12 @@
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    display: none;
-    justify-content: center; align-items: center; z-index: 2000;
+    display: none; justify-content: center; align-items: center; z-index: 2000;
 }
 
 .modal-content {
     background: white; width: 90%; max-width: 550px;
-    padding: 40px; 
-    border-radius: 24px;
-    position: relative;
+    padding: 40px; border-radius: 24px; position: relative;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -237,11 +229,8 @@
 
 .info-grid {
     display: grid; grid-template-columns: 1fr 1fr;
-    background: #F3F4F6;
-    padding: 20px; 
-    border-radius: 16px; 
-    margin-bottom: 25px;
-    border: 1px solid rgba(0,0,0,0.02);
+    background: #F3F4F6; padding: 20px; border-radius: 16px; 
+    margin-bottom: 25px; border: 1px solid rgba(0,0,0,0.02);
 }
 
 .info-item { display: flex; flex-direction: column; text-align: center; }
@@ -258,31 +247,19 @@
 .applicant-card {
     display: flex; align-items: center; gap: 10px;
     background: #f9f9f9; padding: 10px; border-radius: 8px;
-    border: 1px solid #eee;
-    transition: all 0.3s ease;
+    border: 1px solid #eee; transition: all 0.3s ease;
 }
-
 .applicant-card img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
-
 .applicant-info h5 { margin: 0; font-size: 13px; color: var(--text-main); }
 .applicant-info span { font-size: 11px; color: var(--primary); font-weight: bold; }
-
 .applicant-info { display: flex; flex-direction: column; width: 100%; }
-
 .applicant-actions { display: flex; gap: 8px; margin-top: 5px; }
 
 .btn-approve, .btn-reject {
-    border: none;
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-size: 10px;
-    cursor: pointer;
-    transition: 0.2s;
-    color: white;
+    border: none; border-radius: 4px; padding: 2px 8px;
+    font-size: 10px; cursor: pointer; transition: 0.2s; color: white;
 }
-
 .btn-approve { background-color: #10B981; }
 .btn-approve:hover { background-color: #059669; }
-
 .btn-reject { background-color: #EF4444; }
 .btn-reject:hover { background-color: #DC2626; }

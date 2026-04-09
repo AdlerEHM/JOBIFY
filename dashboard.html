@@ -52,26 +52,36 @@
                 
                 <div class="filter-group">
                     <p class="group-label">Nivel de Proyecto</p>
-                    <label><input type="checkbox" class="filter-check" data-tipo="nivel" value="Amateur"> Junior / Amateur</label>
-                    <label><input type="checkbox" class="filter-check" data-tipo="nivel" value="Estándar"> Semisenior / Estándar</label>
-                    <label><input type="checkbox" class="filter-check" data-tipo="nivel" value="Completo"> Senior / Completo</label>
+                    <!-- CORRECCIÓN Bug 2: valores coinciden con los guardados en Firestore -->
+                    <label><input type="checkbox" class="filter-check" data-tipo="nivel" value="Junior"> Junior / Amateur</label>
+                    <label><input type="checkbox" class="filter-check" data-tipo="nivel" value="Semisenior"> Semisenior / Estándar</label>
+                    <label><input type="checkbox" class="filter-check" data-tipo="nivel" value="Senior"> Senior / Completo</label>
                 </div>
 
                 <div class="filter-group">
                     <p class="group-label">Presupuesto (USD)</p>
-                    <input type="range" class="slider" min="0" max="5000" id="budgetRange">
+                    <!-- CORRECCIÓN Bug 3: valor inicial explícito -->
+                    <input type="range" class="slider" min="0" max="5000" value="5000" id="budgetRange">
                     <div style="display: flex; justify-content: space-between; font-size: 12px; color: #888;">
                         <span>$0</span>
-                        <span id="budgetValue">$2500</span>
+                        <span id="budgetValue">$5000</span>
                         <span>$5000+</span>
                     </div>
                 </div>
 
                 <div class="filter-group">
                     <p class="group-label">Duración Estimada</p>
-                    <label><input type="checkbox" class="filter-check" data-tipo="duracion" value="1"> Menos de 1 semana</label>
-                    <label><input type="checkbox" class="filter-check" data-tipo="duracion" value="4"> 1 - 4 semanas</label>
-                    <label><input type="checkbox" class="filter-check" data-tipo="duracion" value="5"> +1 mes</label>
+                    <label><input type="checkbox" class="filter-check" data-tipo="duracion" value="1"> Menos de 2 semanas</label>
+                    <label><input type="checkbox" class="filter-check" data-tipo="duracion" value="4"> 2 - 6 semanas</label>
+                    <label><input type="checkbox" class="filter-check" data-tipo="duracion" value="5"> +6 semanas</label>
+                </div>
+
+                <!-- WORKSPACE EN SIDEBAR -->
+                <div style="border-top: 1px solid #eee; padding-top: 20px;">
+                    <p class="group-label">💬 Workspace</p>
+                    <div id="workspaceList">
+                        <p style="font-size: 12px; color: #999;">Sin proyectos activos.</p>
+                    </div>
                 </div>
 
                 <div id="exclusiveEmpresa" style="display:none; margin-top: 20px;">

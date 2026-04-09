@@ -109,7 +109,7 @@ async function cargarProgramador(uid) {
 
     renderPostulacionesProg(postulaciones);
     renderEnCursoProg(postulaciones);
-    renderHistorialProg(postulaciones);
+    renderHistorialProg(postulaciones, uid);
 }
 
 function renderPostulacionesProg(lista) {
@@ -212,7 +212,8 @@ function renderEnCursoProg(lista) {
     panel.appendChild(grid);
 }
 
-function renderHistorialProg(lista) {
+// CORRECCIÓN: historial con botón valorar
+async function renderHistorialProg(lista, uid) {
     const panel = document.getElementById('panel-historial');
     const items = lista.filter(p =>
         p.estadoProyecto === 'completado' ||
@@ -229,16 +230,23 @@ function renderHistorialProg(lista) {
     const grid = document.createElement('div');
     grid.className = 'cards-grid';
 
-    items.forEach(p => {
+    for (const p of items) {
         const proy = p.proyecto;
         let badgeClass, badgeLabel;
         if (p.estadoProyecto === 'completado')     { badgeClass = 'estado-completado'; badgeLabel = '✅ Completado'; }
         else if (p.estadoProyecto === 'baja')       { badgeClass = 'estado-baja';       badgeLabel = '🚫 Dado de baja'; }
         else                                        { badgeClass = 'estado-rechazado';  badgeLabel = '❌ Rechazado'; }
 
+        // Verificar si ya valoró
+        let yaValoro = false;
+        if (p.estadoProyecto === 'completado') {
+            const valSnap = await getDoc(doc(db, "valoraciones", `${p.id}_programador`));
+            yaValoro = valSnap.exists();
+        }
+
         const card = document.createElement('div');
         card.className = 'mp-card';
-        card.style.opacity = '0.82';
+        card.style.opacity = '0.88';
         card.innerHTML = `
             <div class="mp-card-header">
                 <div class="mp-card-title">${proy?.titulo || p.proyectoTitulo || 'Proyecto'}</div>
@@ -256,9 +264,15 @@ function renderHistorialProg(lista) {
                     onclick="window.location.href='proyecto.html?id=${p.proyectoId}'">
                     Ver proyecto
                 </button>
+                ${p.estadoProyecto === 'completado' ? `
+                    <button class="btn-action ${yaValoro ? 'btn-action-outline' : 'btn-action-primary'}"
+                        onclick="window.location.href='valoracion.html?postulacionId=${p.id}'"
+                        ${yaValoro ? 'style="opacity:0.6;"' : ''}>
+                        ⭐ ${yaValoro ? 'Ver valoración' : 'Dejar valoración'}
+                    </button>` : ''}
             </div>`;
         grid.appendChild(card);
-    });
+    }
 
     panel.appendChild(grid);
 }
@@ -292,7 +306,6 @@ async function cargarEmpresa(uid) {
     renderHistorialEmp(proyectos);
 }
 
-// Tab 1 — Mis Publicaciones con candidatos desplegables
 function renderPublicacionesEmp(proyectos) {
     const panel  = document.getElementById('panel-publicaciones');
     const activos = proyectos.filter(p => p.estado === 'activo');
@@ -307,13 +320,12 @@ function renderPublicacionesEmp(proyectos) {
     grid.className = 'cards-grid';
 
     activos.forEach(p => {
-        const pendientes = p.postulaciones.filter(ps => ps.estado === 'pendiente');
-        const aceptado   = p.postulaciones.find(ps => ps.estado === 'aceptado');
+        const pendientes      = p.postulaciones.filter(ps => ps.estado === 'pendiente');
+        const aceptado        = p.postulaciones.find(ps => ps.estado === 'aceptado');
         const totalCandidatos = p.postulaciones.length;
 
         const card = document.createElement('div');
         card.className = 'mp-card mp-card-expandible';
-
         card.innerHTML = `
             <div class="mp-card-header">
                 <div class="mp-card-title">${p.titulo}</div>
@@ -327,39 +339,31 @@ function renderPublicacionesEmp(proyectos) {
             ${p.tags?.length
                 ? `<div class="tags-mini">${p.tags.map(t => `<span class="tag-mini">${t}</span>`).join('')}</div>`
                 : ''}
-
-            <!-- Botón para desplegar candidatos -->
             <button class="btn-toggle-candidatos" data-proyecto="${p.id}">
                 👥 Ver candidatos
                 <span class="candidatos-count">${totalCandidatos}</span>
                 <span class="toggle-arrow">▼</span>
             </button>
-
-            <!-- Panel de candidatos (oculto por defecto) -->
             <div class="candidatos-panel" id="candidatos-${p.id}" style="display:none;">
                 ${renderCandidatosPanel(p.postulaciones, aceptado)}
             </div>
-
             <div class="mp-card-footer">
                 <button class="btn-action btn-action-outline"
                     onclick="window.location.href='proyecto.html?id=${p.id}'">Ver publicación</button>
                 <button class="btn-action btn-action-danger"
                     onclick="eliminarProyecto('${p.id}')">🗑️ Eliminar</button>
             </div>`;
-
         grid.appendChild(card);
     });
 
     panel.appendChild(grid);
 
-    // Vincular botones de toggle
     document.querySelectorAll('.btn-toggle-candidatos').forEach(btn => {
         btn.addEventListener('click', () => {
             const proyId  = btn.getAttribute('data-proyecto');
             const panelC  = document.getElementById(`candidatos-${proyId}`);
             const arrow   = btn.querySelector('.toggle-arrow');
             const abierto = panelC.style.display !== 'none';
-
             panelC.style.display = abierto ? 'none' : 'block';
             arrow.innerText      = abierto ? '▼' : '▲';
             btn.classList.toggle('active', !abierto);
@@ -367,50 +371,32 @@ function renderPublicacionesEmp(proyectos) {
     });
 }
 
-// Renderiza el panel interior de candidatos
 function renderCandidatosPanel(postulaciones, aceptado) {
     if (postulaciones.length === 0) {
         return `<div class="candidatos-empty">📭 Aún no hay candidatos para este proyecto.</div>`;
     }
-
-    // Agrupar por estado
-    const pendientes  = postulaciones.filter(ps => ps.estado === 'pendiente');
-    const aceptados   = postulaciones.filter(ps => ps.estado === 'aceptado');
-    const rechazados  = postulaciones.filter(ps => ps.estado === 'rechazado');
-
+    const pendientes = postulaciones.filter(ps => ps.estado === 'pendiente');
+    const aceptados  = postulaciones.filter(ps => ps.estado === 'aceptado');
+    const rechazados = postulaciones.filter(ps => ps.estado === 'rechazado');
     let html = '';
-
-    // Programador aceptado
     if (aceptados.length > 0) {
         html += `<div class="candidatos-grupo-titulo">✅ Programador seleccionado</div>`;
-        aceptados.forEach(ps => {
-            html += renderFilaCandidato(ps, 'aceptado');
-        });
+        aceptados.forEach(ps => { html += renderFilaCandidato(ps, 'aceptado'); });
     }
-
-    // Pendientes
     if (pendientes.length > 0) {
         html += `<div class="candidatos-grupo-titulo">⏳ Pendientes de revisión (${pendientes.length})</div>`;
-        pendientes.forEach(ps => {
-            html += renderFilaCandidato(ps, 'pendiente');
-        });
+        pendientes.forEach(ps => { html += renderFilaCandidato(ps, 'pendiente'); });
     }
-
-    // Rechazados
     if (rechazados.length > 0) {
         html += `<div class="candidatos-grupo-titulo rechazados-titulo">❌ Rechazados (${rechazados.length})</div>`;
-        rechazados.forEach(ps => {
-            html += renderFilaCandidato(ps, 'rechazado');
-        });
+        rechazados.forEach(ps => { html += renderFilaCandidato(ps, 'rechazado'); });
     }
-
     return html;
 }
 
 function renderFilaCandidato(ps, estado) {
     const estadoClass = { pendiente: 'estado-pendiente', aceptado: 'estado-aceptado', rechazado: 'estado-rechazado' };
     const estadoLabel = { pendiente: 'En revisión', aceptado: 'Aceptado', rechazado: 'Rechazado' };
-
     return `
         <div class="candidato-card" id="cand-${ps.id}">
             <div class="candidato-card-header">
@@ -422,28 +408,20 @@ function renderFilaCandidato(ps, estado) {
                 </div>
                 <span class="estado-badge ${estadoClass[estado]}">${estadoLabel[estado]}</span>
             </div>
-
             ${ps.nota ? `
                 <div class="candidato-nota">
                     <span class="candidato-nota-label">📝 Nota del candidato</span>
                     <p>${ps.nota}</p>
                 </div>` : ''}
-
-            ${ps.archivoUrl ? `
-                <a href="${ps.archivoUrl}" target="_blank" class="adjunto-link">
-                    📎 Ver propuesta / archivo adjunto
-                </a>` : '<div class="sin-adjunto">Sin archivo adjunto</div>'}
-
+            ${ps.archivoUrl
+                ? `<a href="${ps.archivoUrl}" target="_blank" class="adjunto-link">📎 Ver propuesta / archivo adjunto</a>`
+                : '<div class="sin-adjunto">Sin archivo adjunto</div>'}
             <div class="candidato-card-acciones">
                 ${estado === 'pendiente' ? `
                     <button class="btn-action btn-action-primary"
-                        onclick="gestionarCandidato('${ps.id}','aceptado')">
-                        ✔ Aceptar candidato
-                    </button>
+                        onclick="gestionarCandidato('${ps.id}','aceptado')">✔ Aceptar candidato</button>
                     <button class="btn-action btn-action-danger"
-                        onclick="gestionarCandidato('${ps.id}','rechazado')">
-                        ✖ Rechazar
-                    </button>` : ''}
+                        onclick="gestionarCandidato('${ps.id}','rechazado')">✖ Rechazar</button>` : ''}
                 ${estado === 'aceptado' ? `
                     <button class="btn-action btn-action-primary"
                         onclick="window.location.href='contrato.html?postulacionId=${ps.id}'">
@@ -456,7 +434,6 @@ function renderFilaCandidato(ps, estado) {
 function renderEnCursoEmp(proyectos) {
     const panel = document.getElementById('panel-encurso');
     const items = [];
-
     proyectos.forEach(p => {
         const pos = p.postulaciones.find(ps =>
             ps.estado === 'aceptado' &&
@@ -509,7 +486,8 @@ function renderEnCursoEmp(proyectos) {
     panel.appendChild(grid);
 }
 
-function renderHistorialEmp(proyectos) {
+// CORRECCIÓN: historial empresa con botón valorar
+async function renderHistorialEmp(proyectos) {
     const panel = document.getElementById('panel-historial');
     const items = [];
 
@@ -530,15 +508,22 @@ function renderHistorialEmp(proyectos) {
     const grid = document.createElement('div');
     grid.className = 'cards-grid';
 
-    items.forEach(({ proyecto: p, postulacion: pos, tipo }) => {
+    for (const { proyecto: p, postulacion: pos, tipo } of items) {
         let badgeClass, badgeLabel;
         if (tipo === 'completado')      { badgeClass = 'estado-completado'; badgeLabel = '✅ Completado'; }
         else if (tipo === 'baja')       { badgeClass = 'estado-baja';       badgeLabel = '🚫 Programador dado de baja'; }
         else                            { badgeClass = 'estado-cancelado';  badgeLabel = '❌ Cancelado'; }
 
+        // Verificar si ya valoró (solo si hay postulación y está completado)
+        let yaValoro = false;
+        if (tipo === 'completado' && pos) {
+            const valSnap = await getDoc(doc(db, "valoraciones", `${pos.id}_empresa`));
+            yaValoro = valSnap.exists();
+        }
+
         const card = document.createElement('div');
         card.className = 'mp-card';
-        card.style.opacity = '0.82';
+        card.style.opacity = '0.88';
         card.innerHTML = `
             <div class="mp-card-header">
                 <div class="mp-card-title">${p.titulo}</div>
@@ -551,37 +536,35 @@ function renderHistorialEmp(proyectos) {
             <div class="mp-card-footer">
                 <button class="btn-action btn-action-outline"
                     onclick="window.location.href='proyecto.html?id=${p.id}'">Ver proyecto</button>
+                ${tipo === 'completado' && pos ? `
+                    <button class="btn-action ${yaValoro ? 'btn-action-outline' : 'btn-action-primary'}"
+                        onclick="window.location.href='valoracion.html?postulacionId=${pos.id}'"
+                        ${yaValoro ? 'style="opacity:0.6;"' : ''}>
+                        ⭐ ${yaValoro ? 'Ver valoración' : 'Dejar valoración'}
+                    </button>` : ''}
             </div>`;
         grid.appendChild(card);
-    });
+    }
 
     panel.appendChild(grid);
 }
 
 // ─── ACCIONES GLOBALES ───
-
 window.gestionarCandidato = async (postulacionId, nuevoEstado) => {
     const accion = nuevoEstado === 'aceptado' ? 'aceptar' : 'rechazar';
     if (!confirm(`¿Confirmas ${accion} a este candidato?`)) return;
-
     try {
         await updateDoc(doc(db, "postulaciones", postulacionId), { estado: nuevoEstado });
-
         const postuSnap = await getDoc(doc(db, "postulaciones", postulacionId));
         const postuData = postuSnap.data();
-
         await addDoc(collection(db, "notificaciones"), {
             para: postuData.programadorId,
             mensaje: `Tu postulación para "${postuData.proyectoTitulo}" fue ${nuevoEstado}.`,
-            fecha: new Date().toISOString(),
-            leido: false
+            fecha: new Date().toISOString(), leido: false
         });
-
         if (nuevoEstado === 'aceptado') {
             window.location.href = `contrato.html?postulacionId=${postulacionId}`;
-        } else {
-            window.location.reload();
-        }
+        } else { window.location.reload(); }
     } catch (e) { alert("Error: " + e.message); }
 };
 
@@ -589,18 +572,14 @@ window.darDeBaja = async (postulacionId) => {
     if (!confirm("¿Dar de baja al programador? Esta acción quedará en el historial.")) return;
     try {
         await updateDoc(doc(db, "postulaciones", postulacionId), { estadoProyecto: 'baja' });
-
         const postuSnap = await getDoc(doc(db, "postulaciones", postulacionId));
         const postuData = postuSnap.data();
-
         await addDoc(collection(db, "notificaciones"), {
             para: postuData.programadorId,
             mensaje: `Has sido dado de baja del proyecto "${postuData.proyectoTitulo}".`,
-            fecha: new Date().toISOString(),
-            leido: false
+            fecha: new Date().toISOString(), leido: false
         });
-
-        alert("Programador dado de baja. El proyecto pasó al historial.");
+        alert("Programador dado de baja.");
         window.location.reload();
     } catch (e) { alert("Error: " + e.message); }
 };
