@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script>emailjs.init("bvCwb6Qdnk4UEZ3Gk");</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jobify - Detalle del Proyecto</title>
@@ -88,7 +90,7 @@
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Estado</span>
-                            <span class="detail-value estado-activo">🟢 Activo</span>
+                            <span class="detail-value estado-activo" id="projEstado">🟢 Activo</span>
                         </div>
                     </div>
                 </div>

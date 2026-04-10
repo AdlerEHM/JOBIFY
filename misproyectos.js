@@ -114,7 +114,12 @@ async function cargarProgramador(uid) {
 
 function renderPostulacionesProg(lista) {
     const panel = document.getElementById('panel-postulaciones');
-    const items = lista.filter(p => ['pendiente', 'aceptado', 'rechazado'].includes(p.estado));
+    // Bug 4 fix: excluir postulaciones de proyectos completados/baja (van al historial)
+    const items = lista.filter(p =>
+        ['pendiente', 'aceptado', 'rechazado'].includes(p.estado) &&
+        p.estadoProyecto !== 'completado' &&
+        p.estadoProyecto !== 'baja'
+    );
 
     if (items.length === 0) {
         panel.innerHTML = emptyState('📨', 'Sin postulaciones aún',
@@ -308,7 +313,12 @@ async function cargarEmpresa(uid) {
 
 function renderPublicacionesEmp(proyectos) {
     const panel  = document.getElementById('panel-publicaciones');
-    const activos = proyectos.filter(p => p.estado === 'activo');
+    // Bug 3 fix: excluir proyectos activos que ya tienen una postulación completada
+    const activos = proyectos.filter(p => {
+        if (p.estado !== 'activo') return false;
+        const tieneCompletado = p.postulaciones.some(ps => ps.estadoProyecto === 'completado');
+        return !tieneCompletado;
+    });
 
     if (activos.length === 0) {
         panel.innerHTML = emptyState('📋', 'Sin publicaciones',
@@ -562,6 +572,33 @@ window.gestionarCandidato = async (postulacionId, nuevoEstado) => {
             mensaje: `Tu postulación para "${postuData.proyectoTitulo}" fue ${nuevoEstado}.`,
             fecha: new Date().toISOString(), leido: false
         });
+
+        // Notificación por correo (directo con emailjs global)
+        const progSnap = await getDoc(doc(db, "usuarios", postuData.programadorId));
+        const empSnap  = await getDoc(doc(db, "usuarios", postuData.empresaId));
+        if (progSnap.exists() && empSnap.exists()) {
+            const progEmail  = progSnap.data().email  || "";
+            const progNombre = progSnap.data().nombre || "Programador";
+            const empNombre  = empSnap.data().nombre  || "Empresa";
+            const asunto = nuevoEstado === "aceptado"
+                ? `¡Fuiste aceptado en "${postuData.proyectoTitulo}"!`
+                : `Actualización sobre tu postulación en "${postuData.proyectoTitulo}"`;
+            const mensaje = nuevoEstado === "aceptado"
+                ? `¡Felicidades! La empresa ${empNombre} aceptó tu postulación para el proyecto "${postuData.proyectoTitulo}". Ingresa a Jobify para firmar el contrato e iniciar el proyecto.`
+                : `La empresa ${empNombre} revisó tu postulación para "${postuData.proyectoTitulo}" y en esta ocasión seleccionó otro candidato. ¡No te desanimes! Sigue explorando proyectos en Jobify.`;
+            try {
+                await emailjs.send("service_sq5han5", "template_xxcagun", {
+                    nombre:   progNombre,
+                    to_email: progEmail,
+                    asunto,
+                    mensaje
+                });
+                console.log("✅ Correo enviado a", progEmail);
+            } catch(emailErr) {
+                console.error("❌ Error enviando correo:", emailErr);
+            }
+        }
+
         if (nuevoEstado === 'aceptado') {
             window.location.href = `contrato.html?postulacionId=${postulacionId}`;
         } else { window.location.reload(); }

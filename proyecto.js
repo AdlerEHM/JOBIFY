@@ -95,6 +95,21 @@ function renderizarProyecto(data) {
     document.getElementById('projPago').innerText = modalidadesPago[data.modalidadPago] || data.modalidadPago || 'No especificado';
     document.getElementById('projFecha').innerText = fecha;
 
+    // Bug 5 fix: estado dinámico según datos reales
+    const estadoEl = document.getElementById('projEstado');
+    if (estadoEl) {
+        if (data.estado === 'activo') {
+            estadoEl.innerText = '🟢 Activo';
+            estadoEl.style.color = '#16A34A';
+        } else if (data.estado === 'eliminado') {
+            estadoEl.innerText = '🔴 Eliminado';
+            estadoEl.style.color = '#DC2626';
+        } else {
+            estadoEl.innerText = '⚪ ' + (data.estado || 'Desconocido');
+            estadoEl.style.color = '#888';
+        }
+    }
+
     document.getElementById('loadingState').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
 }
@@ -189,20 +204,35 @@ function mostrarEstadoPostulacion(postulacion) {
         `;
 
     } else if (postulacion.estado === 'aceptado' && ambosFirmaron) {
-        // Aceptado + contrato firmado por ambos → Workspace activo
         document.getElementById('alreadyApplied').style.display = 'block';
-        document.getElementById('alreadyApplied').innerHTML = `
-            <span class="check-icon">🚀</span>
-            <p style="color:#2563EB;">¡Proyecto en curso!</p>
-            <small>El contrato fue firmado por ambas partes.</small>
-            <br>
-            <button onclick="window.location.href='workspace.html?postulacionId=${postulacion.id}'"
-                style="margin-top:14px; padding:12px 20px; background:var(--primary); color:white;
-                       border:none; border-radius:10px; font-weight:700; font-size:14px;
-                       cursor:pointer; width:100%;">
-                💬 Ir al Workspace
-            </button>
-        `;
+
+        if (postulacion.estadoProyecto === 'completado') {
+            // Proyecto completado → ir a valorar
+            document.getElementById('alreadyApplied').innerHTML = `
+                <span class="check-icon">✅</span>
+                <p style="color:#059669;">¡Proyecto completado!</p>
+                <small>El proyecto ha sido finalizado por ambas partes.</small>
+                <br>
+                <button onclick="window.location.href='valoracion.html?postulacionId=${postulacion.id}'"
+                    style="margin-top:14px; padding:12px 20px; background:#10B981; color:white;
+                           border:none; border-radius:10px; font-weight:700; font-size:14px;
+                           cursor:pointer; width:100%;">
+                    ⭐ Dejar valoración
+                </button>`;
+        } else {
+            // Proyecto en curso → ir al workspace
+            document.getElementById('alreadyApplied').innerHTML = `
+                <span class="check-icon">🚀</span>
+                <p style="color:#2563EB;">¡Proyecto en curso!</p>
+                <small>El contrato fue firmado por ambas partes.</small>
+                <br>
+                <button onclick="window.location.href='workspace.html?postulacionId=${postulacion.id}'"
+                    style="margin-top:14px; padding:12px 20px; background:var(--primary); color:white;
+                           border:none; border-radius:10px; font-weight:700; font-size:14px;
+                           cursor:pointer; width:100%;">
+                    💬 Ir al Workspace
+                </button>`;
+        }
 
     } else if (postulacion.estado === 'aceptado' && !ambosFirmaron) {
         // Aceptado pero falta firmar contrato

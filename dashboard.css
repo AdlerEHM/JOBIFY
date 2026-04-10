@@ -124,7 +124,7 @@
 .company-info h4 { font-size: 17px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
 .company-info span { font-size: 14px; font-weight: 600; color: var(--secondary); }
 
-.card-tags { display: flex; gap: 8px; margin-top: 10px; }
+.card-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 
 .tag {
     background: var(--primary-light); color: var(--primary);
@@ -212,6 +212,8 @@
     padding: 40px; border-radius: 24px; position: relative;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 @keyframes slideUp {
@@ -238,6 +240,7 @@
 
 .description-section h4, .tags-section h4 { margin-bottom: 10px; font-size: 15px; }
 .description-section p { font-size: 14px; line-height: 1.6; color: #555; }
+.tags-section .card-tags { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .tag-level { background: var(--primary-light); color: var(--primary); padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; }
 

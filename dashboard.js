@@ -72,14 +72,16 @@ function filtrarAhorra() {
     };
 
     const resultados = todosLosProyectos.filter(p => {
-        const cumplePresupuesto = p.presupuesto <= presupuestoMax;
+        // Bug 1 fix: convertir a Number antes de comparar
+        const cumplePresupuesto = Number(p.presupuesto) <= presupuestoMax;
         const cumpleNivel = filtros.nivel.length === 0 || filtros.nivel.includes(p.nivel);
         let cumpleDuracion = true;
         if (filtros.duracion.length > 0) {
             cumpleDuracion = filtros.duracion.some(val => {
-                if (val === "1") return p.duracionSemanas <= 1;
-                if (val === "4") return p.duracionSemanas > 1 && p.duracionSemanas <= 4;
-                if (val === "5") return p.duracionSemanas > 4;
+                const semanas = Number(p.duracionSemanas);
+                if (val === "1") return semanas <= 2;
+                if (val === "4") return semanas > 2 && semanas <= 6;
+                if (val === "5") return semanas > 6;
                 return false;
             });
         }
@@ -154,14 +156,27 @@ async function verDetalles(id) {
                     const ambosFirmaron = postulacion.contratoFirmadoEmpresa && postulacion.contratoFirmadoProgramador;
 
                     if (postulacion.estado === 'aceptado' && ambosFirmaron) {
-                        // Workspace activo — botón directo
-                        btnApply.style.display = 'none';
-                        const btnWorkspace = document.createElement('button');
-                        btnWorkspace.id = 'btnWorkspaceModal';
-                        btnWorkspace.style.cssText = 'width:100%; padding:13px; background:#2563EB; color:white; border:none; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; margin-bottom:4px;';
-                        btnWorkspace.innerText = '💬 Ir al Workspace';
-                        btnWorkspace.onclick = () => window.location.href = `workspace.html?postulacionId=${postulacion.id}`;
-                        modalFooter.insertBefore(btnWorkspace, modalFooter.firstChild);
+                        const esCompletado = postulacion.estadoProyecto === 'completado';
+
+                        if (esCompletado) {
+                            // Proyecto completado → ir a valoración
+                            btnApply.style.display = 'none';
+                            const btnVal = document.createElement('button');
+                            btnVal.id = 'btnWorkspaceModal';
+                            btnVal.style.cssText = 'width:100%; padding:13px; background:#10B981; color:white; border:none; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; margin-bottom:4px;';
+                            btnVal.innerText = '⭐ Proyecto completado — Valorar';
+                            btnVal.onclick = () => window.location.href = `valoracion.html?postulacionId=${postulacion.id}`;
+                            modalFooter.insertBefore(btnVal, modalFooter.firstChild);
+                        } else {
+                            // Workspace activo
+                            btnApply.style.display = 'none';
+                            const btnWorkspace = document.createElement('button');
+                            btnWorkspace.id = 'btnWorkspaceModal';
+                            btnWorkspace.style.cssText = 'width:100%; padding:13px; background:#2563EB; color:white; border:none; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; margin-bottom:4px;';
+                            btnWorkspace.innerText = '💬 Ir al Workspace';
+                            btnWorkspace.onclick = () => window.location.href = `workspace.html?postulacionId=${postulacion.id}`;
+                            modalFooter.insertBefore(btnWorkspace, modalFooter.firstChild);
+                        }
 
                     } else if (postulacion.estado === 'aceptado' && !ambosFirmaron) {
                         // Aceptado pero falta contrato
@@ -186,7 +201,7 @@ async function verDetalles(id) {
 
             // Si es la empresa dueña del proyecto
             if (data.empresaId === user.uid) {
-                btnApply.innerText = '👁️ Tu proyecto publicado';
+                btnApply.innerText = ' Tu proyecto publicado';
                 btnApply.disabled = true;
                 btnApply.style.backgroundColor = '#64748B';
             }
