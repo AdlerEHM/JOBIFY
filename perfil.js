@@ -3,104 +3,188 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-// Tu configuración (Asegúrate de que storageBucket esté bien)
 const firebaseConfig = {
-  apiKey: "AIzaSyAReLeJ4fIMhjmTQMy6fgOpkEn9ebspjTU",
-  authDomain: "jobify-392f2.firebaseapp.com",
-  projectId: "jobify-392f2",
-  storageBucket: "jobify-392f2.firebasestorage.app",
-  messagingSenderId: "508357161570",
-  appId: "1:508357161570:web:3137bb4e917e2e0552173b"
+    apiKey: "AIzaSyAReLeJ4fIMhjmTQMy6fgOpkEn9ebspjTU",
+    authDomain: "jobify-392f2.firebaseapp.com",
+    projectId: "jobify-392f2",
+    storageBucket: "jobify-392f2.firebasestorage.app",
+    messagingSenderId: "508357161570",
+    appId: "1:508357161570:web:3137bb4e917e2e0552173b"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app); // RQNF23: Inicializamos el almacenamiento
+const app     = initializeApp(firebaseConfig);
+const auth    = getAuth(app);
+const db      = getFirestore(app);
+const storage = getStorage(app);
 
-const tags = ["Python", "Java", "SQL", "C#", "C++", "JavaScript", "PHP", "Swift", "Kotlin", "Dart", "Go", "Ruby", "HTML", "CSS", "TypeScript", "Scala", "R", "MATLAB", "Julia"];
-let selectedTags = [];
+const TAGS = [
+    "Python", "Java", "SQL", "C#", "C++", "JavaScript", "PHP",
+    "Swift", "Kotlin", "Dart", "Go", "Ruby", "HTML", "CSS",
+    "TypeScript", "Scala", "R", "MATLAB", "Julia"
+];
 
+let selectedTags  = [];
+let rolUsuario    = "";
+let usuarioActual = null;
+
+// ─── INICIO ───────────────────────────────────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        const docSnap = await getDoc(doc(db, "usuarios", user.uid));
-        const userData = docSnap.data();
-        if (userData.rol === "Empresa") {
-            document.getElementById('companyFields').style.display = "block";
-        } else {
-            document.getElementById('devFields').style.display = "block";
-            renderTags(); // RQNF07: Las 19 etiquetas obligatorias
-        }
+    if (!user) { window.location.href = "index.html"; return; }
+    usuarioActual = user;
+
+    const docSnap  = await getDoc(doc(db, "usuarios", user.uid));
+    if (!docSnap.exists()) { window.location.href = "index.html"; return; }
+
+    const userData = docSnap.data();
+    rolUsuario     = userData.rol;
+
+    // Título según rol
+    document.getElementById('perfilTitulo').innerText =
+        userData.perfilCompleto ? "Editar Perfil" : "Configura tu Perfil";
+
+    // Cargar datos existentes
+    if (userData.nombre) document.getElementById('displayName').value = userData.nombre;
+
+    // Foto de perfil actual
+    if (userData.foto) {
+        const preview     = document.getElementById('fotoPreview');
+        const placeholder = document.getElementById('fotoPlaceholder');
+        preview.src               = userData.foto;
+        preview.style.display     = 'block';
+        placeholder.style.display = 'none';
+    }
+
+    // Mostrar campos según rol
+    if (rolUsuario === "Empresa") {
+        document.getElementById('companyFields').style.display = "block";
+        if (userData.descripcion) document.getElementById('companyBio').value = userData.descripcion;
     } else {
-        window.location.href = "index.html";
+        document.getElementById('devFields').style.display = "block";
+        selectedTags = userData.habilidades || [];
+        if (userData.pagoSugerido) document.getElementById('payRange').value = userData.pagoSugerido;
+        renderTags();
     }
 });
 
+// ─── RENDER TAGS ──────────────────────────────────────────────────────────
 function renderTags() {
     const cloud = document.getElementById('skillsCloud');
     cloud.innerHTML = "";
-    tags.forEach(tag => {
-        const span = document.createElement('span');
-        span.innerText = tag;
-        span.className = 'skill-tag';
+    TAGS.forEach(tag => {
+        const span       = document.createElement('span');
+        span.innerText   = tag;
+        span.className   = 'skill-tag' + (selectedTags.includes(tag) ? ' selected' : '');
         span.onclick = () => {
-            span.classList.toggle('selected');
-            if(selectedTags.includes(tag)) {
+            if (selectedTags.includes(tag)) {
                 selectedTags = selectedTags.filter(t => t !== tag);
+                span.classList.remove('selected');
             } else {
                 selectedTags.push(tag);
+                span.classList.add('selected');
             }
         };
         cloud.appendChild(span);
     });
 }
 
-// RQF009: Guardar perfil y portafolio
+// ─── PREVIEW DE IMAGEN ────────────────────────────────────────────────────
+document.getElementById('profileImage').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const preview     = document.getElementById('fotoPreview');
+        const placeholder = document.getElementById('fotoPlaceholder');
+        preview.src               = ev.target.result;
+        preview.style.display     = 'block';
+        placeholder.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+});
+
+// ─── CONTADOR DE PALABRAS ─────────────────────────────────────────────────
+const bioEl = document.getElementById('companyBio');
+if (bioEl) {
+    bioEl.addEventListener('input', () => {
+        const palabras = bioEl.value.trim() === '' ? 0 : bioEl.value.trim().split(/\s+/).length;
+        const counter  = document.getElementById('bioCounter');
+        if (counter) {
+            counter.innerText = `${palabras} / 1000 palabras`;
+            counter.style.color = palabras > 1000 ? '#DC2626' : '#aaa';
+        }
+    });
+}
+
+// ─── GUARDAR PERFIL ───────────────────────────────────────────────────────
 document.getElementById('btnSaveProfile').onclick = async () => {
-    const user = auth.currentUser;
-    const name = document.getElementById('displayName').value;
-    const bio = document.getElementById('companyBio').value;
-    const file = document.getElementById('profileImage').files[0];
-    const status = document.getElementById('uploadStatus');
-    
-    let imageUrl = "";
+    const user   = usuarioActual;
+    if (!user)   return;
+
+    const nombre = document.getElementById('displayName').value.trim();
+    const file   = document.getElementById('profileImage').files[0];
+    const btn    = document.getElementById('btnSaveProfile');
+
+    // Validaciones
+    if (!nombre) return mostrarError("El nombre es obligatorio.");
+
+    if (rolUsuario === "Empresa") {
+        const bio     = document.getElementById('companyBio').value.trim();
+        const palabras = bio === '' ? 0 : bio.trim().split(/\s+/).length;
+        if (palabras > 1000) return mostrarError("La descripción no debe exceder las 1000 palabras.");
+    } else {
+        if (selectedTags.length === 0) return mostrarError("Selecciona al menos una habilidad.");
+    }
+
+    btn.innerText = "Guardando...";
+    btn.disabled  = true;
 
     try {
-        // 1. Subida de imagen al Storage
+        let imageUrl = "";
+
+        // Subir imagen si se seleccionó una
         if (file) {
+            const status  = document.getElementById('uploadStatus');
             status.innerText = "Subiendo imagen...";
             const storageRef = ref(storage, `perfiles/${user.uid}`);
             await uploadBytes(storageRef, file);
             imageUrl = await getDownloadURL(storageRef);
-            status.innerText = "¡Imagen subida!";
+            status.innerText = "";
         }
 
-        // 2. Preparación de datos
-        const updateData = { 
-            nombre: name,
-            perfilCompleto: true 
+        // Datos base
+        const updateData = {
+            nombre,
+            perfilCompleto: true,
+            reputacion:     (await getDoc(doc(db, "usuarios", user.uid))).data()?.reputacion   || 5,
+            totalValores:   (await getDoc(doc(db, "usuarios", user.uid))).data()?.totalValores || 0
         };
 
         if (imageUrl) updateData.foto = imageUrl;
 
-        // 3. Validación de campos según el Rol
-        if (selectedTags.length > 0) {
-            updateData.habilidades = selectedTags; 
-            updateData.pagoSugerido = document.getElementById('payRange').value; 
+        // Datos según rol
+        if (rolUsuario === "Empresa") {
+            updateData.descripcion = document.getElementById('companyBio').value.trim();
         } else {
-            if (bio.trim().split(/\s+/).length > 1000) {
-                return alert("La descripción no debe exceder las 1000 palabras.");
-            }
-            updateData.descripcion = bio; 
+            updateData.habilidades   = selectedTags;
+            updateData.pagoSugerido  = document.getElementById('payRange').value || "0";
         }
 
-        // 4. Guardado en Firestore y Redirección
         await updateDoc(doc(db, "usuarios", user.uid), updateData);
-        alert("Perfil guardado con éxito.");
-        
-        window.location.href = "dashboard.html"; // Redirección final
-        
+
+        alert("✅ Perfil guardado con éxito.");
+        window.location.href = "dashboard.html";
+
     } catch (error) {
-        alert("Error: " + error.message);
+        mostrarError("Error al guardar: " + error.message);
+        btn.innerText = "Guardar Perfil";
+        btn.disabled  = false;
     }
 };
+
+// ─── MOSTRAR ERROR ────────────────────────────────────────────────────────
+function mostrarError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.innerText = msg;
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 4000);
+}

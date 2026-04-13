@@ -1,78 +1,224 @@
-/* Contenedor centrado y blanco */
-.profile-container {
-    max-width: 600px; 
-    margin: 50px auto;
-    background: white; 
-    padding: 40px; 
-    border-radius: 12px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+body {
+    margin: 0;
+    font-family: 'Inter', 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #f5f7ff 0%, #ede9fe 100%);
+    min-height: 100vh;
+    color: var(--text-main);
 }
 
+/* ─── CONTENEDOR ─── */
+.profile-container {
+    max-width: 600px;
+    margin: 40px auto;
+    background: white;
+    padding: 44px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(79,70,229,0.10);
+}
+
+/* ─── HEADER ─── */
 .logo-profile {
     color: var(--primary);
-    font-size: 24px;
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 3px;
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 4px;
 }
 
-/* Estilos de Formulario */
-.form-group { margin-bottom: 20px; }
-.field-label { font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #444; }
+.perfil-titulo {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 4px;
+}
 
-input[type="text"], 
-input[type="number"], 
+.perfil-subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+}
+
+/* ─── ERROR ─── */
+.error-msg {
+    background: #FEE2E2;
+    border: 1px solid #FECACA;
+    color: #DC2626;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+/* ─── FORM GROUP ─── */
+.form-group { margin-bottom: 20px; }
+
+.field-label {
+    display: block;
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 8px;
+    color: #444;
+}
+
+.field-hint {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 4px;
+    display: block;
+}
+
+.required { color: #EF4444; }
+
+input[type="text"],
+input[type="number"],
 textarea {
     width: 100%;
-    padding: 12px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
     font-family: inherit;
-    margin-top: 5px;
+    font-size: 14px;
+    background: #FAFAFA;
+    transition: all 0.2s;
+    box-sizing: border-box;
 }
 
-textarea { height: 120px; resize: none; }
+input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
 
-/* Nube de habilidades */
-.skills-cloud { 
-    display: flex; 
-    flex-wrap: wrap; 
-    gap: 8px; 
-    margin: 15px 0 25px 0; 
+textarea {
+    height: 130px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+/* ─── FOTO ─── */
+.foto-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: #F8F9FA;
+    border-radius: 14px;
+    padding: 16px;
+    border: 1px solid var(--border);
+}
+
+.foto-preview-wrapper { flex-shrink: 0; }
+
+.foto-preview {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--primary);
+}
+
+.foto-placeholder {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    border: 2px dashed var(--primary);
+}
+
+.foto-info { flex: 1; }
+
+.upload-status {
+    font-size: 12px;
+    color: var(--primary);
+    margin-top: 4px;
+    display: block;
+}
+
+/* ─── EXCLUSIVE FIELDS ─── */
+.exclusive-fields {
+    background: #F8F9FA;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+}
+
+/* ─── BIO COUNTER ─── */
+.bio-counter {
+    text-align: right;
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 4px;
+}
+
+/* ─── SKILLS CLOUD ─── */
+.skills-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0;
 }
 
 .skill-tag {
-    background: #e8f0fe; 
-    color: var(--primary);
-    padding: 8px 16px; 
-    border-radius: 20px; 
-    cursor: pointer; 
+    background: #F1F5F9;
+    color: var(--text-muted);
+    padding: 7px 14px;
+    border-radius: 20px;
+    cursor: pointer;
     font-size: 13px;
-    transition: 0.2s;
-    border: 1px solid transparent;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: 1.5px solid transparent;
+    user-select: none;
 }
 
-.skill-tag:hover { border-color: var(--primary); }
-.skill-tag.selected { background: var(--primary); color: white; }
+.skill-tag:hover { border-color: var(--primary); color: var(--primary); }
 
-/* Botón Guardar */
+.skill-tag.selected {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    font-weight: 700;
+}
+
+/* ─── BOTÓN GUARDAR ─── */
 .btn-main {
     width: 100%;
     padding: 14px;
     background: var(--primary);
     color: white;
     border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    font-size: 16px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 15px;
     cursor: pointer;
-    margin-top: 20px;
+    margin-top: 8px;
+    transition: all 0.2s;
 }
 
-.btn-main:hover { opacity: 0.9; }
+.btn-main:hover {
+    background: #4338CA;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(79,70,229,0.3);
+}
 
-.exclusive-fields {
-    padding: 20px;
-    background: #f9f9f9;
-    border-radius: 8px;
-    margin-bottom: 20px;
+.btn-main:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 640px) {
+    .profile-container { margin: 20px 12px; padding: 28px 20px; }
+    .foto-group { flex-direction: column; text-align: center; }
 }

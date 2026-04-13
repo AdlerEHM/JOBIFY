@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script>emailjs.init("bvCwb6Qdnk4UEZ3Gk");</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jobify - Mi Perfil</title>
@@ -12,34 +10,60 @@
 <body>
 
     <div class="profile-container">
-        <h1 class="logo-profile">Configura tu Perfil</h1>
-        
+        <h1 class="logo-profile">JOBIFY</h1>
+        <h2 class="perfil-titulo" id="perfilTitulo">Configura tu Perfil</h2>
+        <p class="perfil-subtitle">Completa tu información para empezar a usar la plataforma.</p>
+
+        <!-- Error -->
+        <div id="errorMsg" class="error-msg" style="display:none;"></div>
+
         <div id="profileForm">
-            <div class="form-group">
-                <label>Nombre Público</label>
-                <input type="text" id="displayName" placeholder="Nombre completo o de la Empresa">
+
+            <!-- FOTO DE PERFIL -->
+            <div class="form-group foto-group">
+                <div class="foto-preview-wrapper">
+                    <img id="fotoPreview" src="" alt="Foto" style="display:none;"
+                        class="foto-preview">
+                    <div id="fotoPlaceholder" class="foto-placeholder">📷</div>
+                </div>
+                <div class="foto-info">
+                    <label class="field-label">Foto de perfil</label>
+                    <input type="file" id="profileImage" accept="image/png, image/jpeg, image/webp">
+                    <small id="uploadStatus" class="upload-status"></small>
+                </div>
             </div>
 
+            <!-- NOMBRE -->
             <div class="form-group">
-                <p class="field-label">Logotipo o Foto (RQF006):</p>
-                <input type="file" id="profileImage" accept="image/png, image/jpeg">
-                <small id="uploadStatus"></small>
+                <label class="field-label">Nombre público <span class="required">*</span></label>
+                <input type="text" id="displayName"
+                    placeholder="Tu nombre completo o nombre de la empresa">
             </div>
-            
+
+            <!-- CAMPOS EMPRESA -->
             <div id="companyFields" style="display:none;" class="exclusive-fields">
-                <p class="field-label">Descripción de la empresa (Máx. 1000 palabras):</p>
-                <textarea id="companyBio" placeholder="Cuéntanos sobre tu empresa..."></textarea>
+                <label class="field-label">Descripción de la empresa <span class="required">*</span></label>
+                <textarea id="companyBio"
+                    placeholder="Cuéntanos sobre tu empresa, a qué se dedica, su misión..."></textarea>
+                <div id="bioCounter" class="bio-counter">0 / 1000 palabras</div>
             </div>
 
+            <!-- CAMPOS PROGRAMADOR -->
             <div id="devFields" style="display:none;" class="exclusive-fields">
-                <p class="field-label">Habilidades (Selecciona tus etiquetas):</p>
-                <div id="skillsCloud" class="skills-cloud">
-                    </div>
-                <p class="field-label">Rango de pago preferido (USD):</p>
-                <input type="number" id="payRange" placeholder="Ej: 500">
+                <label class="field-label">Habilidades <span class="required">*</span></label>
+                <p class="field-hint">Selecciona los lenguajes y tecnologías que dominas.</p>
+                <div id="skillsCloud" class="skills-cloud"></div>
+
+                <label class="field-label" style="margin-top:20px;">
+                    Rango de pago sugerido (USD)
+                </label>
+                <input type="number" id="payRange"
+                    placeholder="Ej: 500" min="0">
+                <small class="field-hint">¿Cuánto cobras aproximadamente por proyecto?</small>
             </div>
 
             <button id="btnSaveProfile" class="btn-main">Guardar Perfil</button>
+
         </div>
     </div>
 

@@ -177,24 +177,7 @@ async function confirmarCompletado(db, postulacionId, postulacionData, esEmpresa
             leido:   false
         });
 
-        // Correo cuando ambos confirman completado
-        if (postuData[otroCampo]) {
-            const otroSnap = await getDoc(doc(db, "usuarios", otroId));
-            const yoSnap   = await getDoc(doc(db, "usuarios", usuarioActual.uid));
-            const enviarCorreoCompletado = async (email, nombre) => {
-                if (!email) return;
-                try {
-                    await emailjs.send("service_sq5han5", "template_kdb93sl", {
-                        nombre, to_email: email,
-                        asunto:  `El proyecto "${postulacionData.proyectoTitulo}" ha sido completado`,
-                        mensaje: `El proyecto "${postulacionData.proyectoTitulo}" ha sido completado por ambas partes. Ingresa a Jobify para dejar tu valoración.`
-                    });
-                    console.log("✅ Correo completado enviado a", email);
-                } catch(e) { console.error("❌ Error correo completado:", e); }
-            };
-            if (otroSnap.exists()) await enviarCorreoCompletado(otroSnap.data().email, otroSnap.data().nombre);
-            if (yoSnap.exists())   await enviarCorreoCompletado(yoSnap.data().email, yoSnap.data().nombre);
-        }
+        // Correo de proyecto completado → manejado por Cloud Function onProyectoCompletado
 
         window.location.reload();
 
@@ -396,7 +379,7 @@ function crearFormulario(db, postulacionId, postulacionData, usuarioActual, rolA
                 leido:   false
             });
 
-            // Correo de valoración recibida
+            // Correo de valoración recibida al valuado
             const valuadoId2 = esEmpresa ? postulacionData.programadorId : postulacionData.empresaId;
             const valSnap2   = await getDoc(doc(db, "usuarios", valuadoId2));
             if (valSnap2.exists() && valSnap2.data().email) {
@@ -407,8 +390,21 @@ function crearFormulario(db, postulacionId, postulacionData, usuarioActual, rolA
                         asunto:   `Recibiste una valoración de ${estrellaSeleccionada} ⭐ en "${postulacionData.proyectoTitulo}"`,
                         mensaje:  `Alguien dejó una valoración de ${estrellaSeleccionada} estrellas sobre tu desempeño en el proyecto "${postulacionData.proyectoTitulo}". Ingresa a Jobify para verla.`
                     });
-                    console.log("✅ Correo valoración enviado");
-                } catch(e) { console.error("❌ Error correo valoración:", e); }
+                    console.log("✅ Correo valoración enviado al valuado");
+                } catch(e) { console.error("❌ Error correo valoración valuado:", e); }
+            }
+            // Correo también al que envió la valoración (confirmación)
+            const autorSnap = await getDoc(doc(db, "usuarios", user.uid));
+            if (autorSnap.exists() && autorSnap.data().email) {
+                try {
+                    await emailjs.send("service_sq5han5", "template_kdb93sl", {
+                        nombre:   autorSnap.data().nombre || "Usuario",
+                        to_email: autorSnap.data().email,
+                        asunto:   `Tu valoración en "${postulacionData.proyectoTitulo}" fue enviada`,
+                        mensaje:  `Tu valoración de ${estrellaSeleccionada} estrellas para el proyecto "${postulacionData.proyectoTitulo}" fue enviada exitosamente. ¡Gracias por tu retroalimentación!`
+                    });
+                    console.log("✅ Correo confirmación enviado al autor");
+                } catch(e) { console.error("❌ Error correo confirmación:", e); }
             }
 
             alert("¡Valoración enviada!");

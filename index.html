@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script>emailjs.init("bvCwb6Qdnk4UEZ3Gk");</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jobify - Login</title>
@@ -16,52 +14,59 @@
         <h1 class="logo-main">JOBIFY</h1>
 
         <div class="tabs-header">
-            <button id="btnTabLogin" class="tab-link">Iniciar Sesión</button>
-            <button id="btnTabRegister" class="tab-link active">Registrarse</button>
+            <button id="btnTabLogin" class="tab-link active">Iniciar Sesión</button>
+            <button id="btnTabRegister" class="tab-link">Registrarse</button>
         </div>
 
         <div class="form-content" id="formContent">
             <div class="column-inputs">
                 <div class="input-group">
                     <label>Correo Electrónico</label>
-                    <input type="email" id="email" placeholder="Correo Electrónico">
+                    <input type="email" id="email" placeholder="correo@ejemplo.com">
                 </div>
                 <div class="input-group">
                     <label>Contraseña</label>
-                    <input type="password" id="password" placeholder="Contraseña">
+                    <input type="password" id="password" placeholder="Mínimo 6 caracteres">
                 </div>
 
-                <button id="btnSubmit" class="btn-main">Registrarse</button>
+                <!-- Mensaje de error -->
+                <div id="errorMsg" class="error-msg" style="display:none;"></div>
+
+                <button id="btnSubmit" class="btn-main">Iniciar Sesión</button>
 
                 <div class="separator">ó</div>
 
-                <button class="btn-google">
+                <button id="btnGoogle" class="btn-google">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="G" width="18">
-                    Iniciar Sesión con Google
+                    Continuar con Google
                 </button>
             </div>
 
-            <div class="column-roles" id="roleSelection">
+            <!-- Selección de rol (solo en registro) -->
+            <div class="column-roles" id="roleSelection" style="display:none;">
+                <p style="font-size:13px; color:#666; margin-bottom:12px; font-weight:600;">¿Cómo usarás Jobify?</p>
                 <div class="role-card" id="roleEmpresa">
                     <div class="role-icon">🏢</div>
                     <span>Empresa</span>
+                    <small>Publico proyectos</small>
                 </div>
                 <div class="role-card" id="roleProgramador">
                     <div class="role-icon">💻</div>
                     <span>Programador</span>
+                    <small>Busco proyectos</small>
                 </div>
             </div>
         </div>
 
         <div class="card-footer">
-            <a href="#" id="btnRecover" class="link-footer">Recuperar contraseña</a>
+            <a href="#" id="btnRecover" class="link-footer">¿Olvidaste tu contraseña?</a>
             <div class="status-2fa">
-                <span class="shield-icon">🛡️</span> 2FA Activado
+                <span>🛡️</span> Conexión segura
             </div>
         </div>
     </div>
 </div>
 
-    <script type="module" src="app.js"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>

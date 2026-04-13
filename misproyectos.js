@@ -573,31 +573,7 @@ window.gestionarCandidato = async (postulacionId, nuevoEstado) => {
             fecha: new Date().toISOString(), leido: false
         });
 
-        // Notificación por correo (directo con emailjs global)
-        const progSnap = await getDoc(doc(db, "usuarios", postuData.programadorId));
-        const empSnap  = await getDoc(doc(db, "usuarios", postuData.empresaId));
-        if (progSnap.exists() && empSnap.exists()) {
-            const progEmail  = progSnap.data().email  || "";
-            const progNombre = progSnap.data().nombre || "Programador";
-            const empNombre  = empSnap.data().nombre  || "Empresa";
-            const asunto = nuevoEstado === "aceptado"
-                ? `¡Fuiste aceptado en "${postuData.proyectoTitulo}"!`
-                : `Actualización sobre tu postulación en "${postuData.proyectoTitulo}"`;
-            const mensaje = nuevoEstado === "aceptado"
-                ? `¡Felicidades! La empresa ${empNombre} aceptó tu postulación para el proyecto "${postuData.proyectoTitulo}". Ingresa a Jobify para firmar el contrato e iniciar el proyecto.`
-                : `La empresa ${empNombre} revisó tu postulación para "${postuData.proyectoTitulo}" y en esta ocasión seleccionó otro candidato. ¡No te desanimes! Sigue explorando proyectos en Jobify.`;
-            try {
-                await emailjs.send("service_sq5han5", "template_xxcagun", {
-                    nombre:   progNombre,
-                    to_email: progEmail,
-                    asunto,
-                    mensaje
-                });
-                console.log("✅ Correo enviado a", progEmail);
-            } catch(emailErr) {
-                console.error("❌ Error enviando correo:", emailErr);
-            }
-        }
+        // Correo aceptado/rechazado → manejado por Cloud Function onCambioPostulacion
 
         if (nuevoEstado === 'aceptado') {
             window.location.href = `contrato.html?postulacionId=${postulacionId}`;

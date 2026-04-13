@@ -245,25 +245,8 @@ async function firmarContrato() {
         // Notificar a la otra parte por correo
         const otroId   = esEmpresa ? postulacionData.programadorId : postulacionData.empresaId;
         const otroSnap = await getDoc(doc(db, "usuarios", otroId));
-        const yoSnap   = await getDoc(doc(db, "usuarios", usuarioActual.uid));
-        if (otroSnap.exists() && yoSnap.exists()) {
-            const otroEmail  = otroSnap.data().email  || "";
-            const otroNombre = otroSnap.data().nombre || "Usuario";
-            const yoNombre   = yoSnap.data().nombre   || "Usuario";
-            const rolYo      = esEmpresa ? "La empresa" : "El programador";
-            try {
-                await emailjs.send("service_sq5han5", "template_kdb93sl", {
-                    nombre:   otroNombre,
-                    to_email: otroEmail,
-                    asunto:   `${rolYo} firmó el contrato de "${postulacionData.proyectoTitulo || 'el proyecto'}"`,
-                    mensaje:  `${yoNombre} firmó el contrato del proyecto "${postulacionData.proyectoTitulo || 'el proyecto'}". Ingresa a Jobify para firmar tú también y habilitar el workspace.`
-                });
-                console.log("✅ Correo de contrato enviado a", otroEmail);
-            } catch(emailErr) {
-                console.error("❌ Error enviando correo contrato:", emailErr);
-            }
-        }
         // onSnapshot detectará el cambio y actualizará la UI automáticamente
+        // Correo de firma de contrato → manejado por Cloud Function onCambioPostulacion
     } catch (error) {
         alert("Error al firmar: " + error.message);
         btn.innerText = '✍️ Aceptar y Firmar';
