@@ -89,6 +89,9 @@ onAuthStateChanged(auth, async (user) => {
     badge.innerText = rolActual;
     badge.className = 'role-badge ' + (rolActual === 'Programador' ? 'prog' : 'emp');
 
+    // Inicializar navbar
+    import('./navbar.js').then(module => module.iniciarNavbar());
+
     // Renderizar documento
     renderizarContrato();
 

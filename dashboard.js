@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -217,21 +217,10 @@ document.getElementById('closeModal').onclick = () => {
     document.getElementById('projectModal').style.display = "none";
 };
 
-// --- 3. MENÚ DE PERFIL ---
-const trigger = document.getElementById('profileTrigger');
-const dropdown = document.getElementById('profileDropdown');
-
-trigger.onclick = (e) => {
-    e.stopPropagation();
-    dropdown.classList.toggle('active');
-};
-
+// --- 3. CERRAR MODAL AL CLICK FUERA ---
 window.onclick = (event) => {
     if (event.target === document.getElementById('projectModal')) {
         document.getElementById('projectModal').style.display = "none";
-    }
-    if (!trigger.contains(event.target)) {
-        dropdown.classList.remove('active');
     }
 };
 
@@ -241,7 +230,6 @@ onAuthStateChanged(auth, async (user) => {
         const userSnap = await getDoc(doc(db, "usuarios", user.uid));
         if (userSnap.exists()) {
             const data = userSnap.data();
-            const initial = (data.nombre || "U").charAt(0).toUpperCase();
 
             if (data.rol === "Empresa") {
                 document.getElementById('exclusiveEmpresa').style.display = "block";
@@ -255,21 +243,8 @@ onAuthStateChanged(auth, async (user) => {
                 roleBadge.className = 'role-badge ' + (data.rol === "Programador" ? "prog" : "emp");
             }
 
-            const userPhoto = document.getElementById('userPhoto');
-            const userInitial = document.getElementById('userInitial');
-            if (data.foto) {
-                userPhoto.src = data.foto;
-                userPhoto.style.display = "block";
-                userInitial.style.display = "none";
-            } else {
-                userInitial.innerText = initial;
-                userInitial.style.display = "flex";
-                userPhoto.style.display = "none";
-            }
-
-            document.getElementById('menuName').innerText = data.nombre || "Usuario";
-            document.getElementById('menuEmail').innerText = user.email;
-            document.getElementById('menuInitial').innerText = initial;
+            // Mini perfil y notificaciones → manejado por navbar.js
+            import('./navbar.js').then(m => m.iniciarNavbar());
 
             cargarProyectos();
             cargarWorkspaceSidebar(user.uid, data.rol);
@@ -290,8 +265,7 @@ document.querySelectorAll('.filter-check').forEach(check => {
     check.addEventListener('change', filtrarAhorra);
 });
 
-// Cerrar Sesión
-document.getElementById('btnLogout').onclick = () => signOut(auth);
+// Cerrar Sesión → manejado por navbar.js
 
 // --- LÓGICA DE POSTULACIÓN ---
 async function handlePostulacion() {

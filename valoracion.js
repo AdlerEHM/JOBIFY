@@ -379,33 +379,7 @@ function crearFormulario(db, postulacionId, postulacionData, usuarioActual, rolA
                 leido:   false
             });
 
-            // Correo de valoración recibida al valuado
-            const valuadoId2 = esEmpresa ? postulacionData.programadorId : postulacionData.empresaId;
-            const valSnap2   = await getDoc(doc(db, "usuarios", valuadoId2));
-            if (valSnap2.exists() && valSnap2.data().email) {
-                try {
-                    await emailjs.send("service_sq5han5", "template_kdb93sl", {
-                        nombre:   valSnap2.data().nombre || "Usuario",
-                        to_email: valSnap2.data().email,
-                        asunto:   `Recibiste una valoración de ${estrellaSeleccionada} ⭐ en "${postulacionData.proyectoTitulo}"`,
-                        mensaje:  `Alguien dejó una valoración de ${estrellaSeleccionada} estrellas sobre tu desempeño en el proyecto "${postulacionData.proyectoTitulo}". Ingresa a Jobify para verla.`
-                    });
-                    console.log("✅ Correo valoración enviado al valuado");
-                } catch(e) { console.error("❌ Error correo valoración valuado:", e); }
-            }
-            // Correo también al que envió la valoración (confirmación)
-            const autorSnap = await getDoc(doc(db, "usuarios", user.uid));
-            if (autorSnap.exists() && autorSnap.data().email) {
-                try {
-                    await emailjs.send("service_sq5han5", "template_kdb93sl", {
-                        nombre:   autorSnap.data().nombre || "Usuario",
-                        to_email: autorSnap.data().email,
-                        asunto:   `Tu valoración en "${postulacionData.proyectoTitulo}" fue enviada`,
-                        mensaje:  `Tu valoración de ${estrellaSeleccionada} estrellas para el proyecto "${postulacionData.proyectoTitulo}" fue enviada exitosamente. ¡Gracias por tu retroalimentación!`
-                    });
-                    console.log("✅ Correo confirmación enviado al autor");
-                } catch(e) { console.error("❌ Error correo confirmación:", e); }
-            }
+            // Correos de valoración → manejados por Cloud Functions
 
             alert("¡Valoración enviada!");
             window.location.reload();
