@@ -3,7 +3,7 @@ import {
     getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
     sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, addDoc, collection, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAReLeJ4fIMhjmTQMy6fgOpkEn9ebspjTU",
@@ -48,7 +48,9 @@ function mostrarError(msg) {
 
 // ─── SI YA ESTÁ LOGUEADO → REDIRIGIR ─────────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
-    if (user) await redireccionarUsuario(user);
+    if (user && !sessionStorage.getItem('esperando2FA')) {
+        await redireccionarUsuario(user);
+    }
 });
 
 // ─── TABS ────────────────────────────────────────────────────────────────
@@ -83,6 +85,12 @@ document.getElementById('roleProgramador').onclick = () => {
     document.getElementById('roleEmpresa').classList.remove('selected');
 };
 
+// ─── SEGURIDAD ───────────────────────────────────────────────────────────
+const MAX_INTENTOS = 5;
+const BLOQUEO_MIN  = 15;
+let codigoGenerado = null;
+let userPendiente  = null;
+
 // ─── SUBMIT PRINCIPAL ────────────────────────────────────────────────────
 document.getElementById('btnSubmit').onclick = async () => {
     const correo = document.getElementById('email').value.trim();
@@ -102,12 +110,14 @@ document.getElementById('btnSubmit').onclick = async () => {
         try {
             const credencial = await createUserWithEmailAndPassword(auth, correo, pass);
             await setDoc(doc(db, "usuarios", credencial.user.uid), {
-                uid:            credencial.user.uid,
-                email:          correo,
-                rol:            rolSeleccionado,
-                perfilCompleto: false,
-                reputacion:     5,
-                totalValores:   0
+                uid:              credencial.user.uid,
+                email:            correo,
+                rol:              rolSeleccionado,
+                perfilCompleto:   false,
+                reputacion:       5,
+                totalValores:     0,
+                intentosFallidos: 0,
+                bloqueadoHasta:   null
             });
             await redireccionarUsuario(credencial.user);
         } catch (error) {
@@ -117,14 +127,34 @@ document.getElementById('btnSubmit').onclick = async () => {
         }
 
     } else {
-        btn.innerText = "Iniciando...";
+        btn.innerText = "Verificando...";
         btn.disabled  = true;
 
+        // ── 1. Verificar bloqueo ──
+        const bloqueado = await verificarBloqueo(correo);
+        if (bloqueado) {
+            btn.innerText = "Iniciar Sesión";
+            btn.disabled  = false;
+            return;
+        }
+
         try {
+            sessionStorage.setItem('esperando2FA', '1');
             const credencial = await signInWithEmailAndPassword(auth, correo, pass);
-            await redireccionarUsuario(credencial.user);
+
+            // ── 2. Login exitoso: resetear intentos + guardar log ──
+            const key = correo.replace(/\./g, '_').replace(/@/g, '__');
+            await setDoc(doc(db, "seguridad", key), {
+                intentos: 0, bloqueadoHasta: null, email: correo
+            });
+            await guardarLog(credencial.user.uid, correo, "exitoso");
+
+            // ── 3. Iniciar 2FA ──
+            await iniciar2FA(credencial.user, correo);
+
         } catch (error) {
-            mostrarError(traducirError(error.code));
+            sessionStorage.removeItem('esperando2FA');
+            await registrarIntentoFallido(correo, error.code);
             btn.innerText = "Iniciar Sesión";
             btn.disabled  = false;
         }
@@ -185,3 +215,118 @@ async function redireccionarUsuario(user) {
         window.location.href = "perfil.html";
     }
 }
+
+// ─── VERIFICAR BLOQUEO ────────────────────────────────────────────────────
+async function verificarBloqueo(correo) {
+    try {
+        const key  = correo.replace(/\./g, '_').replace(/@/g, '__');
+        const snap = await getDoc(doc(db, "seguridad", key));
+        if (!snap.exists()) return false;
+        const data = snap.data();
+        if (!data.bloqueadoHasta) return false;
+        const hasta = new Date(data.bloqueadoHasta);
+        if (new Date() < hasta) {
+            const min = Math.ceil((hasta - new Date()) / 60000);
+            mostrarError(`⛔ Cuenta bloqueada. Intenta de nuevo en ${min} minuto${min !== 1 ? 's' : ''}.`);
+            return true;
+        }
+        return false;
+    } catch (e) { return false; }
+}
+
+// ─── REGISTRAR INTENTO FALLIDO ────────────────────────────────────────────
+async function registrarIntentoFallido(correo) {
+    try {
+        const key  = correo.replace(/\./g, '_').replace(/@/g, '__');
+        const ref2 = doc(db, "seguridad", key);
+        const snap = await getDoc(ref2);
+        const data = snap.exists() ? snap.data() : { intentos: 0 };
+        const nuevos = (data.intentos || 0) + 1;
+
+        if (nuevos >= MAX_INTENTOS) {
+            const hasta = new Date(Date.now() + BLOQUEO_MIN * 60000).toISOString();
+            await setDoc(ref2, { intentos: nuevos, bloqueadoHasta: hasta, email: correo });
+            mostrarError(`⛔ Demasiados intentos. Cuenta bloqueada por ${BLOQUEO_MIN} minutos.`);
+        } else {
+            await setDoc(ref2, { intentos: nuevos, bloqueadoHasta: null, email: correo });
+            const restantes = MAX_INTENTOS - nuevos;
+            if (restantes <= 2) {
+                mostrarError(`Correo o contraseña incorrectos. Te quedan ${restantes} intento${restantes !== 1 ? 's' : ''}.`);
+            }
+        }
+    } catch (e) { console.warn("Error registrando intento:", e); }
+}
+
+// ─── GUARDAR LOG DE ACCESO ────────────────────────────────────────────────
+async function guardarLog(uid, correo, estado) {
+    try {
+        await addDoc(collection(db, "logsAcceso"), {
+            uid,
+            email:      correo,
+            estado,
+            fecha:      new Date().toISOString(),
+            navegador:  navigator.userAgent.substring(0, 150),
+            plataforma: navigator.platform || "Desconocido"
+        });
+    } catch (e) { console.warn("Error guardando log:", e); }
+}
+
+// ─── 2FA: GENERAR Y GUARDAR CÓDIGO EN FIRESTORE ───────────────────────────
+async function iniciar2FA(user, correo) {
+    userPendiente  = user;
+    codigoGenerado = Math.floor(100000 + Math.random() * 900000).toString();
+    const expira   = new Date(Date.now() + 5 * 60000).toISOString();
+
+    // Borrar documento anterior si existe (para forzar onCreate en Cloud Function)
+    try { await deleteDoc(doc(db, "codigos2FA", user.uid)); } catch(e) {}
+    // Esperar un momento para asegurar que el delete se procese
+    await new Promise(r => setTimeout(r, 500));
+    // Crear nuevo documento → dispara onCodigo2FA Cloud Function
+    await setDoc(doc(db, "codigos2FA", user.uid), {
+        codigo:   codigoGenerado,
+        email:    correo,
+        expira,
+        usado:    false,
+        creadoEn: new Date().toISOString()
+    });
+
+    // Mostrar pantalla de verificación
+    document.getElementById('formLogin').style.display = 'none';
+    document.getElementById('form2FA').style.display   = 'block';
+    document.getElementById('correo2FA').innerText     = correo;
+
+    // Expirar localmente en 5 min
+    setTimeout(() => { codigoGenerado = null; }, 5 * 60000);
+}
+
+// ─── VERIFICAR CÓDIGO 2FA ────────────────────────────────────────────────
+document.getElementById('btnVerificar2FA').onclick = async () => {
+    const inputCodigo = document.getElementById('codigo2FA').value.trim();
+    const btn         = document.getElementById('btnVerificar2FA');
+
+    if (!inputCodigo) return mostrarError("Escribe el código de verificación.");
+
+    if (!codigoGenerado) return mostrarError("El código expiró. Inicia sesión de nuevo.");
+
+    if (inputCodigo !== codigoGenerado) {
+        return mostrarError("Código incorrecto. Verifica tu correo.");
+    }
+
+    btn.innerText = "Verificando...";
+    btn.disabled  = true;
+
+    // Marcar como usado en Firestore
+    try {
+        await updateDoc(doc(db, "codigos2FA", userPendiente.uid), { usado: true });
+    } catch (e) {}
+
+    codigoGenerado = null;
+    sessionStorage.removeItem('esperando2FA');
+    await redireccionarUsuario(userPendiente);
+};
+
+document.getElementById('btnReenviar2FA').onclick = async () => {
+    if (!userPendiente) return;
+    await iniciar2FA(userPendiente, userPendiente.email);
+    mostrarError("✅ Código reenviado. Revisa tu correo.");
+};

@@ -243,3 +243,6 @@ body {
     .column-roles { display: flex; gap: 12px; }
     .role-card { flex: 1; padding: 14px; }
 }
+/* ─── PANTALLA 2FA ─── */
+#form2FA { animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }

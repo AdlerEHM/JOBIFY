@@ -1,4 +1,4 @@
-const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
+const { onDocumentCreated, onDocumentUpdated, onDocumentWritten } = require("firebase-functions/v2/firestore");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const admin = require("firebase-admin");
 const https = require("https");
@@ -249,5 +249,60 @@ exports.recordatoriosEntrega = onSchedule(
 
             console.log(`✅ Recordatorio: "${postu.proyectoTitulo}" — faltan ${diasRestantes} días`);
         }
+    }
+);
+// ══════════════════════════════════════════════════════════════════════════
+//  TRIGGER 6: Código 2FA creado → enviar correo con el código
+// ══════════════════════════════════════════════════════════════════════════
+exports.onCodigo2FA = onDocumentWritten(
+    "codigos2FA/{uid}",
+    async (event) => {
+        const data = event.data.after.data();
+        if (!data) return; // documento eliminado
+        if (!data.email || !data.codigo) return;
+
+        // Verificar que no haya expirado
+        const expira = new Date(data.expira);
+        if (new Date() > expira) {
+            console.log("Código ya expirado, no se envía correo.");
+            return;
+        }
+
+        await enviarCorreo(
+            TEMPLATE_PROYECTO,
+            data.email,
+            data.email,
+            "Tu código de verificación — Jobify",
+            `Tu código de verificación es: ${data.codigo}\n\nEste código expira en 5 minutos.\nSi no iniciaste sesión en Jobify, cambia tu contraseña inmediatamente.`
+        );
+
+        console.log(`✅ Código 2FA enviado a ${data.email}`);
+    }
+);
+
+// ══════════════════════════════════════════════════════════════════════════
+//  TRIGGER 7: Log de acceso sospechoso → notificar al usuario
+// ══════════════════════════════════════════════════════════════════════════
+exports.onNuevoLog = onDocumentCreated(
+    "logsAcceso/{logId}",
+    async (event) => {
+        const data = event.data.data();
+        // Solo notificar si el estado es exitoso (login real)
+        if (data.estado !== "exitoso") return;
+        if (!data.email) return;
+
+        const fecha = new Date(data.fecha).toLocaleString("es-MX", {
+            timeZone: "America/Mexico_City",
+            day: "2-digit", month: "short", year: "numeric",
+            hour: "2-digit", minute: "2-digit"
+        });
+
+        await enviarCorreo(
+            TEMPLATE_PROYECTO,
+            data.email,
+            data.email,
+            "Nuevo inicio de sesión en Jobify",
+            `Se detectó un nuevo inicio de sesión en tu cuenta de Jobify.\n\nFecha: ${fecha}\nDispositivo: ${data.plataforma || "Desconocido"}\n\nSi no fuiste tú, cambia tu contraseña inmediatamente desde la pantalla de login.`
+        );
     }
 );

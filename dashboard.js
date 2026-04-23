@@ -408,8 +408,7 @@ async function cargarWorkspaceSidebar(uid, rol) {
                     where("estado", "==", "aceptado"))
             );
             postulaciones = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-                .filter(p => p.contratoFirmadoEmpresa && p.contratoFirmadoProgramador
-                          && p.estadoProyecto !== 'baja');
+                .filter(p => p.contratoFirmadoEmpresa && p.contratoFirmadoProgramador);
         } else {
             const snapProy = await getDocs(
                 query(collection(db, "proyectos"), where("empresaId", "==", uid))
@@ -438,6 +437,23 @@ async function cargarWorkspaceSidebar(uid, rol) {
 
         for (const p of postulaciones) {
             const esCompletado = p.estadoProyecto === 'completado';
+            const esBaja       = p.estadoProyecto === 'baja';
+
+            // Si fue dado de baja → mostrar botón para volver a aplicar
+            if (esBaja && rol === 'Programador') {
+                alguno = true;
+                const btn = document.createElement('button');
+                btn.className = 'btn-workspace-sidebar';
+                btn.style.borderColor = '#EF4444';
+                btn.style.color = '#EF4444';
+                btn.innerHTML = `
+                    <span class="ws-dot" style="background:#EF4444;"></span>
+                    <span class="ws-titulo">${p.proyectoTitulo || 'Proyecto'}</span>
+                    <span style="font-size:10px;font-weight:700;white-space:nowrap;color:#EF4444;">Dado de baja</span>`;
+                btn.onclick = () => window.location.href = `dashboard.html`;
+                cont.appendChild(btn);
+                continue;
+            }
 
             // Verificar si ya valoró
             let yaValoro = false;
