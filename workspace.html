@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="workspace.css">
     <link rel="stylesheet" href="valoracion.css">
     <link rel="stylesheet" href="navbar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 
@@ -89,6 +92,7 @@
             <button class="tab-btn" data-tab="finalizar" id="tabFinalizar">🏁 Finalizar</button>
             <!-- Tab valorar: solo visible cuando ambos confirmaron -->
             <button class="tab-btn" data-tab="valorar" id="tabValorar" style="display:none;">⭐ Valorar</button>
+            <button class="tab-btn" data-tab="entrega" id="tabEntrega">📦 Entrega</button>
         </div>
 
         <!-- TAB: CHAT -->
@@ -170,6 +174,33 @@
         <div class="tab-content" id="tab-valorar">
             <div class="valorar-layout">
                 <div id="valorarContenido"></div>
+            </div>
+        </div>
+
+        <!-- TAB: ENTREGA -->
+        <div class="tab-content" id="tab-entrega">
+            <div class="entrega-layout">
+                <div class="entrega-header">
+                    <div>
+                        <h3>Repositorio de Entrega</h3>
+                        <p class="entrega-subtitle">Archivo final del proyecto. Solo el programador puede subir la entrega.</p>
+                    </div>
+                    <div id="entregaAcciones"></div>
+                </div>
+                <div id="entregaInfo" style="display:none;" class="entrega-info-bar"></div>
+                <div class="entrega-explorer" id="entregaExplorer" style="display:none;">
+                    <div class="explorer-tree" id="explorerTree"></div>
+                    <div class="explorer-viewer" id="explorerViewer">
+                        <div class="viewer-placeholder">
+                            <span>Selecciona un archivo para ver su contenido</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="entrega-empty" id="entregaEmpty">
+                    <div class="entrega-empty-icon">📦</div>
+                    <p>No hay entrega subida aún.</p>
+                    <small>El programador debe subir un archivo .zip con el proyecto completo.</small>
+                </div>
             </div>
         </div>
 

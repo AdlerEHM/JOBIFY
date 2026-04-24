@@ -209,11 +209,13 @@ document.getElementById('btnRecover').onclick = async (e) => {
 // ─── REDIRECCIÓN ─────────────────────────────────────────────────────────
 async function redireccionarUsuario(user) {
     const docSnap = await getDoc(doc(db, "usuarios", user.uid));
-    if (docSnap.exists() && docSnap.data().perfilCompleto) {
-        window.location.href = "dashboard.html";
-    } else {
-        window.location.href = "perfil.html";
-    }
+    if (!docSnap.exists()) { window.location.href = "perfil.html"; return; }
+    const data = docSnap.data();
+    // Redirigir según rol
+    if (data.rol === "Admin")      { window.location.href = "admin.html";      return; }
+    if (data.rol === "Moderador")  { window.location.href = "moderador.html";  return; }
+    if (data.perfilCompleto)       { window.location.href = "dashboard.html";  return; }
+    window.location.href = "perfil.html";
 }
 
 // ─── VERIFICAR BLOQUEO ────────────────────────────────────────────────────

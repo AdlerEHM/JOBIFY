@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, collection, addDoc, updateDoc, setDoc,
          query, orderBy, onSnapshot, serverTimestamp, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { getStorage, ref, uploadBytes, getDownloadURL, getBlob } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 import { iniciarValoraciones } from "./valoracion.js";
 
 // ─── GOOGLE CALENDAR ─────────────────────────────────────────────────────
@@ -110,6 +110,7 @@ onAuthStateChanged(auth, async (user) => {
     await verificarChat48h();
     iniciarCalendario();
     iniciarTareas();
+    iniciarEntrega();
     iniciarValoraciones(db, postulacionId, postulacionData, proyectoData, usuarioActual, rolActual);
     // Verificar si el plan está aceptado para habilitar tab Finalizar
     verificarTabFinalizar();
@@ -588,46 +589,51 @@ async function solicitarModificacionPlan() {
 }
 
 // ─── VERIFICAR TAB FINALIZAR ──────────────────────────────────────────────
-async function verificarTabFinalizar() {
+function verificarTabFinalizar() {
     const tabFinalizar = document.getElementById('tabFinalizar');
     if (!tabFinalizar) return;
 
-    const planRef  = doc(db, "postulaciones", postulacionId, "plan", "datos");
-    const planSnap = await getDoc(planRef);
-    const planData = planSnap.exists() ? planSnap.data() : {};
-    const planAceptado = planData.estado === 'aceptado';
+    // Escuchar en tiempo real — se actualiza automáticamente cuando el plan se acepta
+    onSnapshot(doc(db, "postulaciones", postulacionId, "plan", "datos"), (planSnap) => {
+        const planData    = planSnap.exists() ? planSnap.data() : {};
+        const planAceptado = planData.estado === 'aceptado';
 
-    if (!planAceptado) {
-        // Bloquear tab Finalizar
-        tabFinalizar.disabled = true;
-        tabFinalizar.style.opacity = '0.4';
-        tabFinalizar.style.cursor  = 'not-allowed';
-        tabFinalizar.title = 'Primero deben acordar y aceptar el plan de hitos';
+        if (planAceptado) {
+            tabFinalizar.disabled = false;
+            tabFinalizar.style.opacity = '1';
+            tabFinalizar.style.cursor  = 'pointer';
+            tabFinalizar.title = '';
+        } else {
+            tabFinalizar.disabled = true;
+            tabFinalizar.style.opacity = '0.4';
+            tabFinalizar.style.cursor  = 'not-allowed';
+            tabFinalizar.title = 'Primero deben acordar y aceptar el plan de hitos';
 
-        // Mostrar mensaje en el panel de finalizar
-        const panel = document.getElementById('panelCompletar');
-        if (panel) {
-            panel.innerHTML = `
-                <div style="text-align:center; padding:60px 20px; color:var(--text-muted);">
-                    <div style="font-size:48px; margin-bottom:16px;">📅</div>
-                    <h3 style="font-size:18px; font-weight:700; color:var(--text-main); margin-bottom:8px;">
-                        Plan de trabajo pendiente
-                    </h3>
-                    <p style="font-size:14px; line-height:1.6; max-width:360px; margin:0 auto;">
-                        Para finalizar el proyecto primero deben acordar y aceptar el plan de hitos en la pestaña <strong>📅 Calendario</strong>.
-                    </p>
-                </div>`;
-        }
-
-        // Evitar que al hacer clic en el tab vaya al finalizar
-        tabFinalizar.addEventListener('click', (e) => {
-            if (!planAceptado) {
-                e.stopPropagation();
-                e.preventDefault();
-                alert('Primero deben acordar el plan de hitos en la pestaña Calendario.');
+            const panel = document.getElementById('panelCompletar');
+            if (panel) {
+                panel.innerHTML = `
+                    <div style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+                        <div style="font-size:48px;margin-bottom:16px;">📅</div>
+                        <h3 style="font-size:18px;font-weight:700;color:var(--text-main);margin-bottom:8px;">
+                            Plan de trabajo pendiente
+                        </h3>
+                        <p style="font-size:14px;line-height:1.6;max-width:360px;margin:0 auto;">
+                            Para finalizar el proyecto primero deben acordar y aceptar el plan de hitos
+                            en la pestaña <strong>Calendario</strong>.
+                        </p>
+                    </div>`;
             }
-        }, { capture: true });
-    }
+        }
+    });
+
+    // Bloquear click si está deshabilitado
+    tabFinalizar.addEventListener('click', (e) => {
+        if (tabFinalizar.disabled) {
+            e.stopPropagation();
+            e.preventDefault();
+            alert('Primero deben acordar el plan de hitos en la pestaña Calendario.');
+        }
+    }, true);
 }
 
 
@@ -692,4 +698,338 @@ async function agregarHitosACalendar(hitos, token) {
         alert(`⚠️ ${exitosos} hitos agregados, ${errores} fallaron.`);
     else
         alert('❌ No se pudo sincronizar. Intenta de nuevo.');
+}
+// ═══════════════════════════════════════════════════════════════════════════
+//  MÓDULO DE ENTREGA — Repositorio tipo GitHub
+// ═══════════════════════════════════════════════════════════════════════════
+
+function iniciarEntrega() {
+    const accionesEl = document.getElementById('entregaAcciones');
+    if (!accionesEl) return;
+
+    if (rolActual === 'Programador') {
+        const btnSubir = document.createElement('button');
+        btnSubir.className = 'btn-subir-entrega';
+        btnSubir.id = 'btnSubirEntrega';
+        btnSubir.innerText = 'Subir entrega (.zip)';
+        btnSubir.onclick = () => document.getElementById('inputEntregaZip').click();
+        accionesEl.appendChild(btnSubir);
+
+        const input = document.createElement('input');
+        input.type    = 'file';
+        input.id      = 'inputEntregaZip';
+        input.accept  = '.zip';
+        input.style.display = 'none';
+        input.onchange = (e) => procesarZip(e.target.files[0]);
+        accionesEl.appendChild(input);
+    }
+
+    cargarEntregaExistente();
+}
+
+async function cargarEntregaExistente() {
+    try {
+        const snap = await getDoc(doc(db, 'postulaciones', postulacionId, 'entrega', 'datos'));
+        if (!snap.exists()) return;
+        mostrarExplorer(snap.data().archivos || [], snap.data());
+    } catch (e) {
+        console.error('Error cargando entrega:', e);
+    }
+}
+
+// Carpetas a ignorar en el zip
+const CARPETAS_IGNORADAS = [
+    'node_modules/', '.git/', '__pycache__/', '.idea/', '.vscode/',
+    'dist/', 'build/', '.next/', 'venv/', 'env/', '.env/',
+    'coverage/', '.nyc_output/', 'vendor/'
+];
+
+// Extensiones a ignorar (binarios grandes)
+const EXTENSIONES_IGNORADAS = ['exe','dll','so','dylib','bin','dat','db','sqlite'];
+
+function debeIgnorar(ruta) {
+    const rutaLower = ruta.toLowerCase();
+    for (const carpeta of CARPETAS_IGNORADAS) {
+        if (rutaLower.includes(carpeta)) return true;
+    }
+    const ext = ruta.split('.').pop().toLowerCase();
+    if (EXTENSIONES_IGNORADAS.includes(ext)) return true;
+    return false;
+}
+
+// Subir archivos en lotes para no saturar el navegador
+async function subirEnLotes(tareas, tamanoLote = 5) {
+    const resultados = [];
+    for (let i = 0; i < tareas.length; i += tamanoLote) {
+        const lote = tareas.slice(i, i + tamanoLote);
+        const res  = await Promise.all(lote.map(t => t()));
+        resultados.push(...res);
+        // Pequeña pausa entre lotes
+        if (i + tamanoLote < tareas.length) {
+            await new Promise(r => setTimeout(r, 200));
+        }
+    }
+    return resultados;
+}
+
+async function procesarZip(file) {
+    if (!file) return;
+    const btn = document.getElementById('btnSubirEntrega');
+    if (btn) { btn.innerText = 'Procesando...'; btn.disabled = true; }
+
+    try {
+        const zip = await JSZip.loadAsync(file);
+
+        // Recolectar archivos válidos (sin node_modules, etc.)
+        const archivosFiltrados = [];
+        zip.forEach((ruta, archivo) => {
+            if (archivo.dir) return;
+            if (debeIgnorar(ruta)) return;
+            archivosFiltrados.push({ ruta, archivo });
+        });
+
+        if (archivosFiltrados.length === 0) {
+            if (btn) { btn.innerText = 'Subir entrega (.zip)'; btn.disabled = false; }
+            alert('El .zip no contiene archivos válidos, o todos son de carpetas excluidas (node_modules, .git, etc.).');
+            return;
+        }
+
+        if (archivosFiltrados.length > 200) {
+            if (btn) { btn.innerText = 'Subir entrega (.zip)'; btn.disabled = false; }
+            alert(`El .zip contiene ${archivosFiltrados.length} archivos válidos. Por favor incluye solo el código fuente (sin node_modules, dist, etc.). Máximo 200 archivos.`);
+            return;
+        }
+
+        if (btn) btn.innerText = `Subiendo 0/${archivosFiltrados.length} archivos...`;
+
+        // Subir .zip original a Storage
+        const zipRef = ref(storage, `entregas/${postulacionId}/${file.name}`);
+        await uploadBytes(zipRef, file);
+        const zipUrl = await getDownloadURL(zipRef);
+
+        // Crear tareas de upload por lote
+        let subidos = 0;
+        const tareas = archivosFiltrados.map(({ ruta, archivo }) => async () => {
+            try {
+                const blob        = await archivo.async('blob');
+                const archivoRef  = ref(storage, `entregas/${postulacionId}/archivos/${ruta}`);
+                await uploadBytes(archivoRef, blob);
+                const url = await getDownloadURL(archivoRef);
+                subidos++;
+                if (btn) btn.innerText = `Subiendo ${subidos}/${archivosFiltrados.length} archivos...`;
+                return {
+                    ruta,
+                    nombre:    ruta.split('/').pop(),
+                    extension: ruta.includes('.') ? ruta.split('.').pop().toLowerCase() : 'txt',
+                    tamano:    blob.size,
+                    url
+                };
+            } catch (e) {
+                console.warn('Error subiendo:', ruta, e);
+                return null;
+            }
+        });
+
+        const resultados = await subirEnLotes(tareas, 5);
+        const archivos   = resultados.filter(Boolean);
+
+        // Guardar estructura en Firestore (sin contenido)
+        const entregaData = {
+            archivos,
+            zipUrl,
+            zipNombre:     file.name,
+            zipTamano:     file.size,
+            subidoPor:     usuarioActual.uid,
+            subidoEn:      new Date().toISOString(),
+            totalArchivos: archivos.length
+        };
+
+        await setDoc(doc(db, 'postulaciones', postulacionId, 'entrega', 'datos'), entregaData);
+
+        await addDoc(collection(db, 'notificaciones'), {
+            para:    postulacionData.empresaId,
+            mensaje: `El programador subió la entrega final del proyecto "${proyectoData?.titulo || 'Proyecto'}". Revísala en el workspace.`,
+            fecha:   new Date().toISOString(),
+            leido:   false
+        });
+
+        mostrarExplorer(archivos, entregaData);
+        if (btn) { btn.innerText = 'Actualizar entrega'; btn.disabled = false; }
+        alert(`✅ Entrega subida: ${archivos.length} archivos.`);
+
+    } catch (e) {
+        console.error('Error procesando zip:', e);
+        if (btn) { btn.innerText = 'Subir entrega (.zip)'; btn.disabled = false; }
+        alert('Error al procesar el archivo: ' + e.message);
+    }
+}
+
+function mostrarExplorer(archivos, data) {
+    document.getElementById('entregaEmpty').style.display    = 'none';
+    document.getElementById('entregaExplorer').style.display = 'grid';
+
+    const infoEl = document.getElementById('entregaInfo');
+    const fecha  = data.subidoEn ? new Date(data.subidoEn).toLocaleString('es-MX', {
+        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    }) : '—';
+    const tamano = data.zipTamano ? (data.zipTamano / 1024).toFixed(1) + ' KB' : '—';
+    infoEl.style.display = 'flex';
+    infoEl.innerHTML = `
+        <span><strong>${data.zipNombre || 'entrega.zip'}</strong></span>
+        <span>${data.totalArchivos || archivos.length} archivos</span>
+        <span>${tamano}</span>
+        <span>Subido: ${fecha}</span>
+        ${data.zipUrl ? `<a href="${data.zipUrl}" target="_blank" class="btn-descargar-zip">Descargar .zip</a>` : ''}`;
+
+    const treeEl = document.getElementById('explorerTree');
+    treeEl.innerHTML = '';
+
+    // Construir árbol de carpetas
+    const estructura = {};
+    archivos.forEach(archivo => {
+        const partes = archivo.ruta.split('/');
+        let nivel = estructura;
+        partes.forEach((parte, i) => {
+            if (i === partes.length - 1) {
+                nivel[parte] = archivo;
+            } else {
+                if (!nivel[parte]) nivel[parte] = {};
+                nivel = nivel[parte];
+            }
+        });
+    });
+
+    renderTree(estructura, treeEl);
+}
+
+function renderTree(nodo, contenedor) {
+    // Primero carpetas, luego archivos
+    const entradas = Object.entries(nodo).sort(([a, av], [b, bv]) => {
+        const aEsArchivo = !!av.ruta;
+        const bEsArchivo = !!bv.ruta;
+        if (aEsArchivo !== bEsArchivo) return aEsArchivo ? 1 : -1;
+        return a.localeCompare(b);
+    });
+
+    entradas.forEach(([nombre, valor]) => {
+        const item = document.createElement('div');
+
+        if (valor.ruta) {
+            // Archivo
+            item.className = 'tree-file';
+            item.innerHTML = `<span class="tree-icon">${getIcono(valor.extension)}</span><span class="tree-name">${nombre}</span>`;
+            item.onclick = (e) => verArchivo(valor, e.currentTarget);
+        } else {
+            // Carpeta
+            item.className = 'tree-folder';
+            const label = document.createElement('div');
+            label.className = 'tree-folder-label';
+            label.innerHTML = `<span class="tree-icon">📂</span><span class="tree-name">${nombre}</span>`;
+            const hijos = document.createElement('div');
+            hijos.className = 'tree-children';
+            renderTree(valor, hijos);
+            label.onclick = () => {
+                hijos.classList.toggle('collapsed');
+                label.querySelector('.tree-icon').textContent =
+                    hijos.classList.contains('collapsed') ? '📁' : '📂';
+            };
+            item.appendChild(label);
+            item.appendChild(hijos);
+        }
+        contenedor.appendChild(item);
+    });
+}
+
+async function verArchivo(archivo, elementoClick) {
+    const viewer = document.getElementById('explorerViewer');
+    const ext    = archivo.extension || 'txt';
+
+    // Marcar activo
+    document.querySelectorAll('.tree-file').forEach(el => el.classList.remove('active'));
+    if (elementoClick) elementoClick.classList.add('active');
+
+    // Imágenes — usar URL directo en img tag (no fetch, evita CORS)
+    if (['png','jpg','jpeg','gif','webp','svg'].includes(ext)) {
+        viewer.innerHTML = `
+            <div class="viewer-header">
+                <span class="viewer-path">${archivo.ruta}</span>
+                <span class="viewer-lang">${ext.toUpperCase()}</span>
+            </div>
+            <div style="padding:20px;text-align:center;color:#64748B;">
+                <img src="${archivo.url}" style="max-width:100%;max-height:400px;border-radius:8px;" onerror="this.style.display='none';this.nextSibling.style.display='block'">
+                <p style="display:none;">No se puede previsualizar la imagen.</p>
+            </div>`;
+        return;
+    }
+
+    // Archivos binarios — solo link de descarga
+    if (['zip','pdf','docx','xlsx','exe','dll','jar'].includes(ext)) {
+        viewer.innerHTML = `
+            <div class="viewer-header">
+                <span class="viewer-path">${archivo.ruta}</span>
+            </div>
+            <div style="padding:40px;text-align:center;color:#64748B;">
+                <p>Archivo binario — no se puede previsualizar.</p>
+                <a href="${archivo.url}" target="_blank" class="btn-descargar-zip" style="display:inline-block;margin-top:12px;">Descargar archivo</a>
+            </div>`;
+        return;
+    }
+
+    // Mostrar cargando
+    viewer.innerHTML = `
+        <div class="viewer-header">
+            <span class="viewer-path">${archivo.ruta}</span>
+            <span class="viewer-lang">${getLang(ext).toUpperCase()}</span>
+        </div>
+        <div style="padding:20px;color:#64748B;font-size:13px;">Cargando...</div>`;
+
+    try {
+        // Usar getBlob del SDK de Firebase (evita CORS)
+        const storageRef = ref(storage, `entregas/${postulacionId}/archivos/${archivo.ruta}`);
+        const blob = await getBlob(storageRef);
+        const text = await blob.text();
+        const lang = getLang(ext);
+
+        viewer.innerHTML = `
+            <div class="viewer-header">
+                <span class="viewer-path">${archivo.ruta}</span>
+                <span class="viewer-lang">${lang.toUpperCase()}</span>
+            </div>
+            <pre class="viewer-pre"><code class="language-${lang} hljs">${escapeHtml(text)}</code></pre>`;
+
+        if (window.hljs) {
+            viewer.querySelectorAll('code').forEach(el => hljs.highlightElement(el));
+        }
+    } catch (e) {
+        console.error('Error cargando archivo:', e);
+        viewer.innerHTML = `
+            <div class="viewer-header">
+                <span class="viewer-path">${archivo.ruta}</span>
+            </div>
+            <div style="padding:20px;color:#EF4444;font-size:13px;">
+                Error al cargar el archivo. Intenta de nuevo.
+            </div>`;
+    }
+}
+
+function escapeHtml(text) {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function getIcono(ext) {
+    const m = { js:'🟨', ts:'🔷', py:'🐍', java:'☕', html:'🌐', css:'🎨',
+                json:'📋', md:'📝', php:'🐘', cpp:'⚙️', c:'⚙️', sql:'🗄️',
+                txt:'📄', png:'🖼️', jpg:'🖼️', svg:'🖼️', sh:'💻' };
+    return m[ext] || '📄';
+}
+
+function getLang(ext) {
+    const m = { js:'javascript', ts:'typescript', py:'python', java:'java',
+                html:'html', css:'css', json:'json', md:'markdown', php:'php',
+                cpp:'cpp', c:'c', sql:'sql', xml:'xml', yaml:'yaml',
+                yml:'yaml', sh:'bash', txt:'plaintext' };
+    return m[ext] || 'plaintext';
 }

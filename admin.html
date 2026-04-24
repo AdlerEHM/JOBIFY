@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobify — Panel de Administración</title>
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="admin-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar">
+        <div class="admin-brand">
+            <span class="admin-logo">JOBIFY</span>
+            <span class="admin-rol-badge admin">Administrador</span>
+        </div>
+        <nav class="admin-nav">
+            <span class="admin-nav-section">General</span>
+            <button class="admin-nav-btn active" data-tab="stats">
+                <i class="nav-icon">▦</i> Estadísticas
+            </button>
+            <span class="admin-nav-section">Gestión</span>
+            <button class="admin-nav-btn" data-tab="usuarios">
+                <i class="nav-icon">◉</i> Usuarios
+            </button>
+            <button class="admin-nav-btn" data-tab="proyectos">
+                <i class="nav-icon">▤</i> Proyectos
+            </button>
+            <button class="admin-nav-btn" data-tab="moderadores">
+                <i class="nav-icon">◈</i> Moderadores
+            </button>
+            <span class="admin-nav-section">Sistema</span>
+            <button class="admin-nav-btn" data-tab="seguridad">
+                <i class="nav-icon">▣</i> Seguridad
+            </button>
+            <button class="admin-nav-btn" data-tab="config">
+                <i class="nav-icon">◎</i> Configuración
+            </button>
+        </nav>
+        <button id="btnLogoutAdmin" class="admin-logout">Cerrar Sesión</button>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="admin-main">
+        <div class="admin-header">
+            <div>
+                <h1 id="adminPageTitle">Estadísticas Generales</h1>
+                <span id="adminFecha" class="admin-header-sub"></span>
+            </div>
+        </div>
+
+        <!-- TAB: ESTADÍSTICAS -->
+        <div class="admin-tab active" id="tab-stats">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Usuarios totales</div>
+                    <div class="stat-num" id="statUsuarios">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Empresas</div>
+                    <div class="stat-num" id="statEmpresas">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Programadores</div>
+                    <div class="stat-num" id="statProgramadores">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Proyectos activos</div>
+                    <div class="stat-num" id="statProyectos">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Postulaciones</div>
+                    <div class="stat-num" id="statPostulaciones">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Proyectos completados</div>
+                    <div class="stat-num" id="statCompletados">—</div>
+                </div>
+                <div class="stat-card primary">
+                    <div class="stat-label">Comisiones estimadas (USD)</div>
+                    <div class="stat-num" id="statComisiones">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Cuentas bloqueadas</div>
+                    <div class="stat-num" id="statBloqueados">—</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: USUARIOS -->
+        <div class="admin-tab" id="tab-usuarios">
+            <div class="admin-toolbar">
+                <input type="text" id="searchUsuarios" placeholder="Buscar por nombre o correo..." class="admin-search">
+                <select id="filterRolUsuarios" class="admin-filter">
+                    <option value="">Todos los roles</option>
+                    <option value="Programador">Programadores</option>
+                    <option value="Empresa">Empresas</option>
+                    <option value="Moderador">Moderadores</option>
+                    <option value="baneado">Baneados</option>
+                </select>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Correo</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaUsuarios"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB: PROYECTOS -->
+        <div class="admin-tab" id="tab-proyectos">
+            <div class="admin-toolbar">
+                <input type="text" id="searchProyectos" placeholder="Buscar proyecto..." class="admin-search">
+                <select id="filterEstadoProyectos" class="admin-filter">
+                    <option value="">Todos los estados</option>
+                    <option value="activo">Activos</option>
+                    <option value="finalizado">Finalizados</option>
+                    <option value="eliminado">Eliminados</option>
+                </select>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Proyecto</th>
+                            <th>Empresa</th>
+                            <th>Presupuesto</th>
+                            <th>Nivel</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaProyectos"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB: MODERADORES -->
+        <div class="admin-tab" id="tab-moderadores">
+            <div class="admin-toolbar">
+                <button id="btnCrearModerador" class="btn-admin-primary">+ Asignar Moderador</button>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Correo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaModerados"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB: SEGURIDAD -->
+        <div class="admin-tab" id="tab-seguridad">
+            <div class="stats-grid" style="margin-bottom:24px;">
+                <div class="stat-card">
+                    <div class="stat-label">Logins hoy</div>
+                    <div class="stat-num" id="statLogsHoy">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Cuentas bloqueadas ahora</div>
+                    <div class="stat-num" id="statBloqueadosHoy">—</div>
+                </div>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Correo</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                            <th>Plataforma</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaLogs"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB: CONFIGURACIÓN -->
+        <div class="admin-tab" id="tab-config">
+            <div class="config-section">
+                <h3>Parámetros de la Plataforma</h3>
+                <div class="config-group">
+                    <label>Comisión de Jobify (%)</label>
+                    <input type="number" id="configComision" value="3.95" min="0" max="100" step="0.01" class="admin-input" style="max-width:140px;">
+                </div>
+                <div class="config-group">
+                    <label>Comisión fija (MXN)</label>
+                    <input type="number" id="configComisionFija" value="4" min="0" class="admin-input" style="max-width:140px;">
+                </div>
+                <div class="config-group">
+                    <label>Minutos de bloqueo por intentos fallidos</label>
+                    <input type="number" id="configBloqueoMin" value="15" min="1" class="admin-input" style="max-width:140px;">
+                </div>
+                <div class="config-group">
+                    <label>Máximo de intentos antes de bloqueo</label>
+                    <input type="number" id="configMaxIntentos" value="5" min="1" class="admin-input" style="max-width:140px;">
+                </div>
+                <div class="config-group">
+                    <label>Horas límite para responder en chat</label>
+                    <input type="number" id="configHoras48" value="48" min="1" class="admin-input" style="max-width:140px;">
+                </div>
+                <button id="btnGuardarConfig" class="btn-admin-primary" style="margin-top:8px;">Guardar cambios</button>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- MODAL EDITAR USUARIO -->
+<div id="modalEditarUsuario" class="admin-modal" style="display:none;">
+    <div class="admin-modal-box">
+        <h3>Editar Usuario</h3>
+        <p>Modifica los datos del usuario seleccionado.</p>
+        <input type="hidden" id="editUserId">
+        <div class="config-group">
+            <label>Nombre</label>
+            <input type="text" id="editNombre" class="admin-input">
+        </div>
+        <div class="config-group">
+            <label>Rol</label>
+            <select id="editRol" class="admin-input">
+                <option value="Programador">Programador</option>
+                <option value="Empresa">Empresa</option>
+                <option value="Moderador">Moderador</option>
+                <option value="Admin">Administrador</option>
+            </select>
+        </div>
+        <div class="config-group">
+            <label>URL de foto de perfil</label>
+            <input type="text" id="editFoto" class="admin-input" placeholder="https://...">
+        </div>
+        <div class="modal-actions">
+            <button id="btnConfirmarEditar" class="btn-admin-primary">Guardar cambios</button>
+            <button id="btnCancelarEditar" class="btn-admin-secondary">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CREAR MODERADOR -->
+<div id="modalModerador" class="admin-modal" style="display:none;">
+    <div class="admin-modal-box">
+        <h3>Asignar Moderador</h3>
+        <p>Ingresa el correo del usuario que quieres convertir en moderador.</p>
+        <input type="email" id="correoModerador" placeholder="correo@ejemplo.com" class="admin-input">
+        <div class="modal-actions">
+            <button id="btnConfirmarModerador" class="btn-admin-primary">Confirmar</button>
+            <button id="btnCancelarModerador" class="btn-admin-secondary">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="admin.js"></script>
+</body>
+</html>
