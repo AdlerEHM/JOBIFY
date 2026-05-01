@@ -485,3 +485,33 @@ textarea {
     .portafolio-header { flex-direction: column; }
     .btn-agregar-portafolio { width: 100%; text-align: center; }
 }
+/* ─── SELECT ─── */
+.field-select {
+    width: 100%;
+    padding: 10px 13px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    background: #FAFAFA;
+    color: var(--text-main);
+    transition: all 0.2s;
+    box-sizing: border-box;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394A3B8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+}
+.field-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background-color: white;
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* ─── EMPRESA: tarjeta de proyecto ─── */
+#listaProyectosEmpresa .portafolio-item:hover {
+    border-color: var(--primary);
+}

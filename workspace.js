@@ -59,19 +59,18 @@ onAuthStateChanged(auth, async (user) => {
         return;
     }
 
-    // Bug fix: bloquear acceso si el programador fue dado de baja
+    // Bloquear acceso SOLO si fue dado de baja (proyecto completado sí permite acceso)
     if (postulacionData.estadoProyecto === 'baja' && user.uid === postulacionData.programadorId) {
         document.getElementById('loadingState').style.display = 'none';
         document.getElementById('chatBloqueado').style.display = 'flex';
         document.getElementById('chatBloqueado').innerHTML = `
             <div class="bloqueado-box">
-                <span class="lock-icon">🚫</span>
                 <h3>Sin acceso al workspace</h3>
                 <p>Tu participación en este proyecto fue dada de baja.</p>
                 <p style="font-size:13px;color:#999;margin-top:8px;">${postulacionData.motivoBaja || ''}</p>
                 <button class="btn-main" style="margin-top:16px;"
                     onclick="window.location.href='dashboard.html'">
-                    ← Volver al Dashboard
+                    Volver al Dashboard
                 </button>
             </div>`;
         return;
@@ -105,6 +104,15 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     document.getElementById('workspaceMain').style.display = 'flex';
+
+    // Banner informativo si el proyecto está completado
+    if (postulacionData.estadoProyecto === 'completado') {
+        const banner = document.createElement('div');
+        banner.style.cssText = 'background:#F0FDF4;border-bottom:1px solid #BBF7D0;padding:10px 24px;font-size:13px;color:#15803D;font-weight:600;display:flex;align-items:center;gap:8px;flex-shrink:0;';
+        banner.innerHTML = '<span>&#10003;</span> Este proyecto fue completado — el workspace está disponible en modo historial.';
+        document.getElementById('workspaceMain').prepend(banner);
+    }
+
     configurarTabs();
     iniciarChat();
     await verificarChat48h();

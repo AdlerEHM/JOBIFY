@@ -163,9 +163,9 @@ async function verDetalles(id) {
                             btnApply.style.display = 'none';
                             const btnVal = document.createElement('button');
                             btnVal.id = 'btnWorkspaceModal';
-                            btnVal.style.cssText = 'width:100%; padding:13px; background:#10B981; color:white; border:none; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; margin-bottom:4px;';
-                            btnVal.innerText = '⭐ Proyecto completado — Valorar';
-                            btnVal.onclick = () => window.location.href = `valoracion.html?postulacionId=${postulacion.id}`;
+                            btnVal.style.cssText = 'width:100%; padding:13px; background:#4F46E5; color:white; border:none; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; margin-bottom:4px;';
+                            btnVal.innerText = 'Ver workspace del proyecto';
+                            btnVal.onclick = () => window.location.href = `workspace.html?postulacionId=${postulacion.id}`;
                             modalFooter.insertBefore(btnVal, modalFooter.firstChild);
                         } else {
                             // Workspace activo
@@ -408,7 +408,15 @@ async function cargarWorkspaceSidebar(uid, rol) {
                     where("estado", "==", "aceptado"))
             );
             postulaciones = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-                .filter(p => p.contratoFirmadoEmpresa && p.contratoFirmadoProgramador);
+                .filter(p => p.contratoFirmadoEmpresa && p.contratoFirmadoProgramador
+                          && p.estadoProyecto !== 'baja');
+            // Solo un workspace por proyecto (deduplicar)
+            const _vistos = new Set();
+            postulaciones = postulaciones.filter(p => {
+                if (_vistos.has(p.proyectoId)) return false;
+                _vistos.add(p.proyectoId);
+                return true;
+            });
         } else {
             const snapProy = await getDocs(
                 query(collection(db, "proyectos"), where("empresaId", "==", uid))
@@ -437,23 +445,6 @@ async function cargarWorkspaceSidebar(uid, rol) {
 
         for (const p of postulaciones) {
             const esCompletado = p.estadoProyecto === 'completado';
-            const esBaja       = p.estadoProyecto === 'baja';
-
-            // Si fue dado de baja → mostrar botón para volver a aplicar
-            if (esBaja && rol === 'Programador') {
-                alguno = true;
-                const btn = document.createElement('button');
-                btn.className = 'btn-workspace-sidebar';
-                btn.style.borderColor = '#EF4444';
-                btn.style.color = '#EF4444';
-                btn.innerHTML = `
-                    <span class="ws-dot" style="background:#EF4444;"></span>
-                    <span class="ws-titulo">${p.proyectoTitulo || 'Proyecto'}</span>
-                    <span style="font-size:10px;font-weight:700;white-space:nowrap;color:#EF4444;">Dado de baja</span>`;
-                btn.onclick = () => window.location.href = `dashboard.html`;
-                cont.appendChild(btn);
-                continue;
-            }
 
             // Verificar si ya valoró
             let yaValoro = false;
@@ -463,16 +454,15 @@ async function cargarWorkspaceSidebar(uid, rol) {
                 yaValoro = valSnap.exists();
             }
 
-            // Si ya valoró y el proyecto está completado → no mostrar
-            if (esCompletado && yaValoro) continue;
+            // Proyectos completados siempre aparecen en sidebar
 
             alguno = true;
             const btn = document.createElement('button');
 
-            if (esCompletado && !yaValoro) {
+            if (esCompletado) {
                 btn.className = 'btn-workspace-sidebar';
                 btn.innerHTML = `
-                    <span class="ws-dot" style="background:#F59E0B;"></span>
+                    <span class="ws-dot" style="background:#10B981;"></span>
                     <span class="ws-titulo">${p.proyectoTitulo || 'Proyecto'}</span>
                     <span style="font-size:10px;color:#D97706;font-weight:700;white-space:nowrap;">⭐ Valorar</span>`;
                 btn.onclick = () => window.location.href = `valoracion.html?postulacionId=${p.id}`;

@@ -44,10 +44,51 @@
                 </div>
 
                 <!-- CAMPOS EMPRESA -->
-                <div id="companyFields" style="display:none;" class="exclusive-fields">
-                    <label class="field-label">Descripción de la empresa <span class="required">*</span></label>
-                    <textarea id="companyBio" placeholder="Cuéntanos sobre tu empresa..."></textarea>
-                    <div id="bioCounter" class="bio-counter">0 / 1000 palabras</div>
+                <div id="companyFields" style="display:none;">
+                    <div class="exclusive-fields">
+                        <div class="form-group">
+                            <label class="field-label">Industria / Sector <span class="required">*</span></label>
+                            <select id="companyIndustria" class="field-select">
+                                <option value="">Selecciona una industria</option>
+                                <option value="Tecnología">Tecnología</option>
+                                <option value="Educación">Educación</option>
+                                <option value="Salud">Salud</option>
+                                <option value="Finanzas">Finanzas</option>
+                                <option value="Comercio electrónico">Comercio electrónico</option>
+                                <option value="Marketing y publicidad">Marketing y publicidad</option>
+                                <option value="Manufactura">Manufactura</option>
+                                <option value="Logística">Logística</option>
+                                <option value="Entretenimiento">Entretenimiento</option>
+                                <option value="Consultoría">Consultoría</option>
+                                <option value="Gobierno">Gobierno</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="field-label">Tamaño de la empresa</label>
+                            <select id="companyTamano" class="field-select">
+                                <option value="">Selecciona el tamaño</option>
+                                <option value="1-10 empleados">1-10 empleados</option>
+                                <option value="11-50 empleados">11-50 empleados</option>
+                                <option value="51-200 empleados">51-200 empleados</option>
+                                <option value="201-500 empleados">201-500 empleados</option>
+                                <option value="500+ empleados">500+ empleados</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="field-label">Ubicación</label>
+                            <input type="text" id="companyUbicacion" placeholder="Ciudad, País">
+                        </div>
+                        <div class="form-group">
+                            <label class="field-label">Sitio web</label>
+                            <input type="url" id="companyWeb" placeholder="https://www.tuempresa.com">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top:16px;">
+                        <label class="field-label">Descripción de la empresa <span class="required">*</span></label>
+                        <textarea id="companyBio" placeholder="Describe a qué se dedica tu empresa, su misión y qué tipo de proyectos busca..."></textarea>
+                        <div id="bioCounter" class="bio-counter">0 / 1000 palabras</div>
+                    </div>
                 </div>
 
                 <!-- CAMPOS PROGRAMADOR -->
@@ -68,21 +109,39 @@
             </div>
         </aside>
 
-        <!-- COLUMNA DERECHA: portafolio (solo programadores) -->
+        <!-- COLUMNA DERECHA: portafolio (programadores) o proyectos publicados (empresas) -->
         <main class="perfil-main" id="portafolioSection" style="display:none;">
-            <div class="portafolio-header">
-                <div>
-                    <h2 class="portafolio-titulo">🗂️ Mi Portafolio</h2>
-                    <p class="portafolio-subtitle">Muestra tu trabajo a las empresas. Cada proyecto aumenta tus chances.</p>
+            <!-- SECCIÓN PROGRAMADOR: portafolio -->
+            <div id="seccionPortafolio" style="display:none;">
+                <div class="portafolio-header">
+                    <div>
+                        <h2 class="portafolio-titulo">Portafolio de Proyectos</h2>
+                        <p class="portafolio-subtitle">Muestra tu trabajo a las empresas. Cada proyecto aumenta tus posibilidades de ser contratado.</p>
+                    </div>
+                    <button id="btnAgregarProyecto" class="btn-agregar-portafolio">+ Agregar proyecto</button>
                 </div>
-                <button id="btnAgregarProyecto" class="btn-agregar-portafolio">+ Agregar proyecto</button>
+                <div class="portafolio-grid" id="portafolioItems">
+                    <div class="portafolio-empty" id="portafolioEmpty">
+                        <h3>Sin proyectos aún</h3>
+                        <p>Agrega tus mejores proyectos para destacar ante las empresas.</p>
+                    </div>
+                </div>
             </div>
 
-            <div class="portafolio-grid" id="portafolioItems">
-                <div class="portafolio-empty" id="portafolioEmpty">
-                    <div class="empty-icon">🖼️</div>
-                    <h3>Sin proyectos aún</h3>
-                    <p>Agrega tus mejores proyectos para destacar ante las empresas.</p>
+            <!-- SECCIÓN EMPRESA: proyectos publicados -->
+            <div id="seccionEmpresa" style="display:none;">
+                <div class="portafolio-header">
+                    <div>
+                        <h2 class="portafolio-titulo">Proyectos Publicados</h2>
+                        <p class="portafolio-subtitle">Estos son los proyectos que has publicado en la plataforma.</p>
+                    </div>
+                    <button class="btn-agregar-portafolio" onclick="window.location.href='publicar.html'">+ Publicar proyecto</button>
+                </div>
+                <div id="listaProyectosEmpresa" class="portafolio-grid">
+                    <div class="portafolio-empty" id="empresaProyectosEmpty">
+                        <h3>Sin proyectos publicados</h3>
+                        <p>Publica tu primer proyecto para encontrar al programador ideal.</p>
+                    </div>
                 </div>
             </div>
         </main>

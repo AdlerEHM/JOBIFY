@@ -269,11 +269,15 @@ async function renderHistorialProg(lista, uid) {
                     onclick="window.location.href='proyecto.html?id=${p.proyectoId}'">
                     Ver proyecto
                 </button>
+                <button class="btn-action btn-action-outline"
+                    onclick="window.location.href='workspace.html?postulacionId=${p.id}'">
+                    Ver workspace
+                </button>
                 ${p.estadoProyecto === 'completado' ? `
                     <button class="btn-action ${yaValoro ? 'btn-action-outline' : 'btn-action-primary'}"
-                        onclick="window.location.href='valoracion.html?postulacionId=${p.id}'"
+                        onclick="abrirValoracion('${p.id}')"
                         ${yaValoro ? 'style="opacity:0.6;"' : ''}>
-                        ⭐ ${yaValoro ? 'Ver valoración' : 'Dejar valoración'}
+                        ${yaValoro ? 'Ver valoración' : 'Dejar valoración'}
                     </button>` : ''}
             </div>`;
         grid.appendChild(card);
@@ -546,11 +550,15 @@ async function renderHistorialEmp(proyectos) {
             <div class="mp-card-footer">
                 <button class="btn-action btn-action-outline"
                     onclick="window.location.href='proyecto.html?id=${p.id}'">Ver proyecto</button>
+                <button class="btn-action btn-action-outline"
+                    onclick="window.location.href='workspace.html?postulacionId=${pos?.id || ''}'">
+                    Ver workspace
+                </button>
                 ${tipo === 'completado' && pos ? `
                     <button class="btn-action ${yaValoro ? 'btn-action-outline' : 'btn-action-primary'}"
-                        onclick="window.location.href='valoracion.html?postulacionId=${pos.id}'"
+                        onclick="abrirValoracion('${pos.id}')"
                         ${yaValoro ? 'style="opacity:0.6;"' : ''}>
-                        ⭐ ${yaValoro ? 'Ver valoración' : 'Dejar valoración'}
+                        ${yaValoro ? 'Ver valoración' : 'Dejar valoración'}
                     </button>` : ''}
             </div>`;
         grid.appendChild(card);
@@ -603,4 +611,8 @@ window.eliminarProyecto = async (proyectoId) => {
         await updateDoc(doc(db, "proyectos", proyectoId), { estado: 'eliminado' });
         window.location.reload();
     } catch (e) { alert("Error: " + e.message); }
+};
+// ─── ABRIR VALORACION ────────────────────────────────────────────────────
+window.abrirValoracion = (postulacionId) => {
+    window.location.href = `valoracion.html?postulacionId=${postulacionId}`;
 };

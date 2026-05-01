@@ -16,7 +16,7 @@
     text-align: center;
     margin-bottom: 28px;
 }
-.proyecto-completado-banner .banner-icon { font-size: 40px; display: block; margin-bottom: 8px; }
+
 .proyecto-completado-banner h3 { font-size: 18px; font-weight: 800; color: #065F46; margin-bottom: 4px; }
 .proyecto-completado-banner p  { font-size: 13px; color: #047857; }
 
@@ -238,7 +238,7 @@
     border: 1px solid var(--border);
     flex-wrap: wrap;
 }
-.completar-box span { font-size: 28px; flex-shrink: 0; }
+
 .completar-box div { flex: 1; }
 .completar-box strong { font-size: 14px; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 3px; }
 .completar-box p { font-size: 12px; color: var(--text-muted); margin: 0; line-height: 1.5; }

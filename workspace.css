@@ -965,3 +965,58 @@
 .entrega-empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
 .entrega-empty p    { font-size: 15px; font-weight: 600; margin: 0 0 6px; }
 .entrega-empty small { font-size: 12px; }
+/* ═══════════════════════════════════════════════════════════
+   MÓDULO DE PAGO — PayPal
+   ═══════════════════════════════════════════════════════════ */
+.finalizar-layout-wrap { padding: 24px; max-width: 520px; margin: 0 auto; }
+
+.pago-card {
+    background: white; border-radius: 12px;
+    border: 1px solid var(--border); padding: 28px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.pago-titulo    { font-size: 18px; font-weight: 800; color: var(--text-main); margin: 0 0 6px; }
+.pago-subtitulo { font-size: 13px; color: var(--text-muted); margin: 0 0 24px; line-height: 1.5; }
+
+.pago-desglose {
+    background: #F8FAFC; border-radius: 10px;
+    border: 1px solid var(--border); overflow: hidden; margin-bottom: 16px;
+}
+.pago-fila {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    font-size: 14px; color: var(--text-main);
+}
+.pago-fila:last-child { border-bottom: none; }
+.pago-fila.comision   { color: var(--text-muted); font-size: 13px; }
+.pago-fila.total      { background: white; font-weight: 700; font-size: 15px; }
+.pago-fila.total strong { color: var(--primary); font-size: 18px; }
+
+.pago-nota {
+    font-size: 12px; color: #475569;
+    background: #F0FDF4; border: 1px solid #BBF7D0;
+    border-radius: 8px; padding: 10px 14px;
+    margin-bottom: 20px; line-height: 1.5;
+}
+.pago-nota strong { color: #15803D; }
+
+.paypal-container { margin-top: 4px; }
+
+.pago-estado {
+    margin-top: 12px; padding: 10px 14px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; text-align: center;
+}
+.pago-estado.procesando { background: #FEF3C7; color: #D97706; }
+.pago-estado.exitoso    { background: #F0FDF4; color: #15803D; }
+.pago-estado.error      { background: #FEE2E2; color: #DC2626; }
+
+.pago-completado-box { text-align: center; padding: 48px 24px; max-width: 440px; margin: 0 auto; }
+.pago-check {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: #F0FDF4; border: 2px solid #BBF7D0;
+    color: #15803D; font-size: 24px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+}
+.pago-completado-box h3 { font-size: 18px; font-weight: 700; color: var(--text-main); margin: 0 0 8px; }
+.pago-completado-box p  { font-size: 13px; color: var(--text-muted); margin: 0 0 20px; line-height: 1.5; }

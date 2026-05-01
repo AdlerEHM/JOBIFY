@@ -86,8 +86,20 @@ document.getElementById('roleProgramador').onclick = () => {
 };
 
 // ─── SEGURIDAD ───────────────────────────────────────────────────────────
-const MAX_INTENTOS = 5;
-const BLOQUEO_MIN  = 15;
+let MAX_INTENTOS = 5;
+let BLOQUEO_MIN  = 15;
+
+// Cargar configuración desde Firestore al inicio
+async function cargarConfigSeguridad() {
+    try {
+        const snap = await getDoc(doc(db, "configuracion", "plataforma"));
+        if (snap.exists()) {
+            const cfg = snap.data();
+            if (cfg.maxIntentos) MAX_INTENTOS = cfg.maxIntentos;
+            if (cfg.bloqueoMin)  BLOQUEO_MIN  = cfg.bloqueoMin;
+        }
+    } catch (e) { console.warn("No se pudo cargar config seguridad:", e); }
+}
 let codigoGenerado = null;
 let userPendiente  = null;
 
@@ -130,7 +142,8 @@ document.getElementById('btnSubmit').onclick = async () => {
         btn.innerText = "Verificando...";
         btn.disabled  = true;
 
-        // ── 1. Verificar bloqueo ──
+        // ── 1. Cargar config y verificar bloqueo ──
+        await cargarConfigSeguridad();
         const bloqueado = await verificarBloqueo(correo);
         if (bloqueado) {
             btn.innerText = "Iniciar Sesión";
@@ -209,13 +222,11 @@ document.getElementById('btnRecover').onclick = async (e) => {
 // ─── REDIRECCIÓN ─────────────────────────────────────────────────────────
 async function redireccionarUsuario(user) {
     const docSnap = await getDoc(doc(db, "usuarios", user.uid));
-    if (!docSnap.exists()) { window.location.href = "perfil.html"; return; }
-    const data = docSnap.data();
-    // Redirigir según rol
-    if (data.rol === "Admin")      { window.location.href = "admin.html";      return; }
-    if (data.rol === "Moderador")  { window.location.href = "moderador.html";  return; }
-    if (data.perfilCompleto)       { window.location.href = "dashboard.html";  return; }
-    window.location.href = "perfil.html";
+    if (docSnap.exists() && docSnap.data().perfilCompleto) {
+        window.location.href = "dashboard.html";
+    } else {
+        window.location.href = "perfil.html";
+    }
 }
 
 // ─── VERIFICAR BLOQUEO ────────────────────────────────────────────────────
@@ -229,9 +240,13 @@ async function verificarBloqueo(correo) {
         const hasta = new Date(data.bloqueadoHasta);
         if (new Date() < hasta) {
             const min = Math.ceil((hasta - new Date()) / 60000);
-            mostrarError(`⛔ Cuenta bloqueada. Intenta de nuevo en ${min} minuto${min !== 1 ? 's' : ''}.`);
+            mostrarError(`Cuenta bloqueada. Intenta de nuevo en ${min} minuto${min !== 1 ? 's' : ''}.`);
             return true;
         }
+        // Ya pasó el tiempo de bloqueo — resetear automáticamente
+        await setDoc(doc(db, "seguridad", key), {
+            intentos: 0, bloqueadoHasta: null, email: correo
+        });
         return false;
     } catch (e) { return false; }
 }

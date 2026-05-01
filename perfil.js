@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const firebaseConfig = {
@@ -58,14 +58,26 @@ onAuthStateChanged(auth, async (user) => {
     // Mostrar campos según rol
     if (rolUsuario === "Empresa") {
         document.getElementById('companyFields').style.display = "block";
-        if (userData.descripcion) document.getElementById('companyBio').value = userData.descripcion;
+        document.getElementById('portafolioSection').style.display = 'block';
+        document.getElementById('seccionEmpresa').style.display = 'block';
+
+        // Cargar datos de empresa
+        if (userData.descripcion)  document.getElementById('companyBio').value       = userData.descripcion;
+        if (userData.industria)    document.getElementById('companyIndustria').value  = userData.industria;
+        if (userData.tamano)       document.getElementById('companyTamano').value     = userData.tamano;
+        if (userData.ubicacion)    document.getElementById('companyUbicacion').value  = userData.ubicacion;
+        if (userData.sitioWeb)     document.getElementById('companyWeb').value        = userData.sitioWeb;
+
+        // Cargar proyectos publicados por la empresa
+        await cargarProyectosEmpresa(user.uid);
     } else {
         document.getElementById('devFields').style.display = "block";
         selectedTags = userData.habilidades || [];
         if (userData.pagoSugerido) document.getElementById('payRange').value = userData.pagoSugerido;
         renderTags();
-        // Mostrar columna portafolio
+        // Mostrar sección portafolio
         document.getElementById('portafolioSection').style.display = 'block';
+        document.getElementById('seccionPortafolio').style.display = 'block';
         // Cargar portafolio existente
         portafolioItems = userData.portafolio || [];
         if (portafolioItems.length > 0) {
@@ -74,6 +86,57 @@ onAuthStateChanged(auth, async (user) => {
         portafolioItems.forEach((item, i) => renderPortafolioItem(item, i));
     }
 });
+
+
+// ─── PROYECTOS DE EMPRESA ─────────────────────────────────────────────────
+async function cargarProyectosEmpresa(uid) {
+    const snap = await getDocs(query(
+        collection(db, 'proyectos'),
+        where('empresaId', '==', uid)
+    ));
+
+    const lista = document.getElementById('listaProyectosEmpresa');
+    const empty = document.getElementById('empresaProyectosEmpty');
+
+    if (snap.empty) {
+        empty.style.display = 'block';
+        return;
+    }
+
+    empty.style.display = 'none';
+
+    snap.docs.forEach(d => {
+        const p     = d.data();
+        const fecha = p.fechaPublicacion
+            ? new Date(p.fechaPublicacion).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' })
+            : '—';
+
+        const card = document.createElement('div');
+        card.className = 'portafolio-item';
+        card.style.cursor = 'pointer';
+        card.innerHTML = `
+            <div class="portafolio-card-body">
+                <div class="portafolio-item-header">
+                    <span class="portafolio-item-numero">${p.estado || 'activo'}</span>
+                    <span style="font-size:11px;color:#94A3B8;">${fecha}</span>
+                </div>
+                <div class="portafolio-field">
+                    <strong style="font-size:15px;color:var(--text-main);">${p.titulo || 'Sin título'}</strong>
+                </div>
+                <div class="portafolio-field">
+                    <span style="font-size:13px;color:var(--text-muted);">
+                        $${p.presupuesto || 0} USD &nbsp;·&nbsp; ${p.nivel || '—'} &nbsp;·&nbsp; ${p.duracionSemanas || '?'} semanas
+                    </span>
+                </div>
+                ${p.tags?.length ? `
+                <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;">
+                    ${p.tags.slice(0,4).map(t => `<span style="padding:2px 8px;background:#EEF2FF;color:#4338CA;border-radius:4px;font-size:11px;font-weight:600;">${t}</span>`).join('')}
+                </div>` : ''}
+            </div>`;
+        card.onclick = () => window.location.href = `proyecto.html?id=${d.id}`;
+        lista.appendChild(card);
+    });
+}
 
 // ─── RENDER TAGS ──────────────────────────────────────────────────────────
 function renderTags() {
@@ -173,6 +236,10 @@ document.getElementById('btnSaveProfile').onclick = async () => {
         // Datos según rol
         if (rolUsuario === "Empresa") {
             updateData.descripcion = document.getElementById('companyBio').value.trim();
+            updateData.industria   = document.getElementById('companyIndustria').value;
+            updateData.tamano      = document.getElementById('companyTamano').value;
+            updateData.ubicacion   = document.getElementById('companyUbicacion').value.trim();
+            updateData.sitioWeb    = document.getElementById('companyWeb').value.trim();
         } else {
             updateData.habilidades   = selectedTags;
             updateData.pagoSugerido  = document.getElementById('payRange').value || "0";
@@ -198,7 +265,7 @@ document.getElementById('btnSaveProfile').onclick = async () => {
 
         await updateDoc(doc(db, "usuarios", user.uid), updateData);
 
-        alert("✅ Perfil guardado con éxito.");
+        alert("Perfil guardado con éxito.");
         window.location.href = "dashboard.html";
 
     } catch (error) {

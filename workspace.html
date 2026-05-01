@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=AcuzIYDLNSVIutxNHkRUBxqLY50VZ6CKmQG0bnxoqm4VPtP70jeuBWBDMjhXB5OKBNfdS9DIvDgEzrRL&currency=USD&intent=capture"></script>
 </head>
 <body>
 
@@ -23,7 +24,7 @@
         <div class="top-bar-right">
             <button id="btnContrato" class="btn-contrato"
                 onclick="window.location.href='contrato.html?postulacionId=' + postulacionIdGlobal">
-                📄 Ver Contrato
+                Ver Contrato
             </button>
         <div class="user-actions">
             <span id="roleBadge" class="role-badge">...</span>
@@ -52,11 +53,11 @@
                         <div class="menu-reputacion" id="menuReputacion"></div>
                     </div>
                     <div class="dropdown-body">
-                        <button onclick="window.location.href='perfil.html'" class="btn-menu">⚙️ Editar Perfil</button>
-                        <button onclick="window.location.href='misproyectos.html'" class="btn-menu" style="margin-top:6px;">📁 Mis Proyectos</button>
+                        <button onclick="window.location.href='perfil.html'" class="btn-menu">Editar Perfil</button>
+                        <button onclick="window.location.href='misproyectos.html'" class="btn-menu" style="margin-top:6px;">Mis Proyectos</button>
                     </div>
                     <div class="dropdown-footer">
-                        <button id="btnLogout" class="btn-logout-dropdown">🚪 Cerrar Sesión</button>
+                        <button id="btnLogout" class="btn-logout-dropdown">Cerrar Sesión</button>
                     </div>
                 </div>
             </div>
@@ -71,12 +72,11 @@
 
     <div id="chatBloqueado" class="chat-bloqueado" style="display:none;">
         <div class="bloqueado-box">
-            <span class="lock-icon">🔒</span>
             <h3>Chat no disponible aún</h3>
             <p>El chat se habilita cuando <strong>ambas partes</strong> firmen el contrato.</p>
             <button class="btn-main"
                 onclick="window.location.href='contrato.html?postulacionId=' + postulacionIdGlobal">
-                📄 Ir a firmar el contrato
+                Ir a firmar el contrato
             </button>
         </div>
     </div>
@@ -85,14 +85,14 @@
 
         <!-- TABS -->
         <div class="tabs-bar">
-            <button class="tab-btn active" data-tab="chat">💬 Chat</button>
-            <button class="tab-btn" data-tab="calendario">📅 Calendario</button>
-            <button class="tab-btn" data-tab="tareas">✅ Tareas</button>
+            <button class="tab-btn active" data-tab="chat">Chat</button>
+            <button class="tab-btn" data-tab="calendario">Calendario</button>
+            <button class="tab-btn" data-tab="tareas">Tareas</button>
             <!-- Tab finalizar: visible siempre, cambia estado según progreso -->
-            <button class="tab-btn" data-tab="finalizar" id="tabFinalizar">🏁 Finalizar</button>
+            <button class="tab-btn" data-tab="finalizar" id="tabFinalizar">Finalizar</button>
             <!-- Tab valorar: solo visible cuando ambos confirmaron -->
-            <button class="tab-btn" data-tab="valorar" id="tabValorar" style="display:none;">⭐ Valorar</button>
-            <button class="tab-btn" data-tab="entrega" id="tabEntrega">📦 Entrega</button>
+            <button class="tab-btn" data-tab="valorar" id="tabValorar" style="display:none;">Valorar</button>
+            <button class="tab-btn" data-tab="entrega" id="tabEntrega">Entrega</button>
         </div>
 
         <!-- TAB: CHAT -->
@@ -123,7 +123,7 @@
         <div class="tab-content" id="tab-calendario">
             <div class="calendario-layout">
                 <div class="calendario-header">
-                    <h3>📅 Plan de Trabajo</h3>
+                    <h3>Plan de Trabajo</h3>
                     <p class="cal-subtitle">Fechas de entrega acordadas entre empresa y programador. Una vez propuesto y aceptado por ambas partes, el plan queda bloqueado y sirve como compromiso formal.</p>
                 </div>
                 <div id="planEstado" class="plan-estado"></div>
@@ -144,7 +144,7 @@
         <div class="tab-content" id="tab-tareas">
             <div class="tareas-layout">
                 <div class="tareas-header">
-                    <h3>✅ Checklist de Tareas</h3>
+                    <h3>Checklist de Tareas</h3>
                     <p class="tareas-subtitle">Checklist personal del programador para organizar su trabajo. La empresa puede ver el avance pero no puede modificar las tareas.</p>
                     <button id="btnNuevaTarea" class="btn-nueva-tarea">+ Nueva Tarea</button>
                 </div>
