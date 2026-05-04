@@ -222,7 +222,22 @@ document.getElementById('btnRecover').onclick = async (e) => {
 // ─── REDIRECCIÓN ─────────────────────────────────────────────────────────
 async function redireccionarUsuario(user) {
     const docSnap = await getDoc(doc(db, "usuarios", user.uid));
-    if (docSnap.exists() && docSnap.data().perfilCompleto) {
+    if (!docSnap.exists()) {
+        window.location.href = "perfil.html";
+        return;
+    }
+    const data = docSnap.data();
+    const rol  = data.rol || "";
+
+    if (rol === "Admin") {
+        window.location.href = "admin.html";
+        return;
+    }
+    if (rol === "Moderador") {
+        window.location.href = "moderador.html";
+        return;
+    }
+    if (data.perfilCompleto) {
         window.location.href = "dashboard.html";
     } else {
         window.location.href = "perfil.html";
@@ -247,23 +262,31 @@ async function verificarBloqueo(correo) {
         await setDoc(doc(db, "seguridad", key), {
             intentos: 0, bloqueadoHasta: null, email: correo
         });
+        console.log("Bloqueo expirado, cuenta desbloqueada automáticamente.");
         return false;
     } catch (e) { return false; }
 }
 
 // ─── REGISTRAR INTENTO FALLIDO ────────────────────────────────────────────
-async function registrarIntentoFallido(correo) {
+async function registrarIntentoFallido(correo, errorCode) {
     try {
+        // Mostrar error de Firebase primero
+        mostrarError(traducirError(errorCode));
+
         const key  = correo.replace(/\./g, '_').replace(/@/g, '__');
         const ref2 = doc(db, "seguridad", key);
         const snap = await getDoc(ref2);
         const data = snap.exists() ? snap.data() : { intentos: 0 };
+
+        // Si ya está bloqueado no sumar más intentos
+        if (data.bloqueadoHasta && new Date() < new Date(data.bloqueadoHasta)) return;
+
         const nuevos = (data.intentos || 0) + 1;
 
         if (nuevos >= MAX_INTENTOS) {
             const hasta = new Date(Date.now() + BLOQUEO_MIN * 60000).toISOString();
             await setDoc(ref2, { intentos: nuevos, bloqueadoHasta: hasta, email: correo });
-            mostrarError(`⛔ Demasiados intentos. Cuenta bloqueada por ${BLOQUEO_MIN} minutos.`);
+            mostrarError(`Demasiados intentos fallidos. Cuenta bloqueada por ${BLOQUEO_MIN} minuto${BLOQUEO_MIN !== 1 ? 's' : ''}.`);
         } else {
             await setDoc(ref2, { intentos: nuevos, bloqueadoHasta: null, email: correo });
             const restantes = MAX_INTENTOS - nuevos;
