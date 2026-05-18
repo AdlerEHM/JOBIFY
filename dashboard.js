@@ -72,7 +72,6 @@ function filtrarAhorra() {
     };
 
     const resultados = todosLosProyectos.filter(p => {
-        // Bug 1 fix: convertir a Number antes de comparar
         const cumplePresupuesto = Number(p.presupuesto) <= presupuestoMax;
         const cumpleNivel = filtros.nivel.length === 0 || filtros.nivel.includes(p.nivel);
         let cumpleDuracion = true;
@@ -96,14 +95,12 @@ async function verDetalles(id) {
     const user = auth.currentUser;
     const btnApply = document.getElementById('btnApply');
 
-    // Resetear botón
     btnApply.innerText = "Postularme ahora";
     btnApply.disabled = false;
     btnApply.style.backgroundColor = "";
     btnApply.style.display = "block";
     btnApply.onclick = handlePostulacion;
 
-    // Resetear/limpiar botón workspace si existía
     const btnWS = document.getElementById('btnWorkspaceModal');
     if (btnWS) btnWS.remove();
 
@@ -123,7 +120,6 @@ async function verDetalles(id) {
         tagsCont.innerHTML = "";
         if (data.tags) data.tags.forEach(t => tagsCont.innerHTML += `<span class="tag">${t}</span>`);
 
-        // Botón "Ver más"
         const modalFooter = document.querySelector('.modal-footer');
         let btnVerMas = document.getElementById('btnVerMas');
         if (!btnVerMas) {
@@ -138,7 +134,6 @@ async function verDetalles(id) {
 
         btnApply.setAttribute('data-id', id);
 
-        // Si hay usuario logueado y es programador, verificar estado de postulación
         if (user) {
             const userSnap = await getDoc(doc(db, "usuarios", user.uid));
             const userData = userSnap.data();
@@ -159,7 +154,6 @@ async function verDetalles(id) {
                         const esCompletado = postulacion.estadoProyecto === 'completado';
 
                         if (esCompletado) {
-                            // Proyecto completado → ir a valoración
                             btnApply.style.display = 'none';
                             const btnVal = document.createElement('button');
                             btnVal.id = 'btnWorkspaceModal';
@@ -168,7 +162,6 @@ async function verDetalles(id) {
                             btnVal.onclick = () => window.location.href = `workspace.html?postulacionId=${postulacion.id}`;
                             modalFooter.insertBefore(btnVal, modalFooter.firstChild);
                         } else {
-                            // Workspace activo
                             btnApply.style.display = 'none';
                             const btnWorkspace = document.createElement('button');
                             btnWorkspace.id = 'btnWorkspaceModal';
@@ -179,19 +172,16 @@ async function verDetalles(id) {
                         }
 
                     } else if (postulacion.estado === 'aceptado' && !ambosFirmaron) {
-                        // Aceptado pero falta contrato
                         btnApply.innerText = '📄 Ir a firmar el contrato';
                         btnApply.style.backgroundColor = '#10B981';
                         btnApply.onclick = () => window.location.href = `contrato.html?postulacionId=${postulacion.id}`;
 
                     } else if (postulacion.estado === 'pendiente') {
-                        // En revisión
                         btnApply.innerText = '⏳ Postulación en revisión';
                         btnApply.disabled = true;
                         btnApply.style.backgroundColor = '#D97706';
 
                     } else if (postulacion.estado === 'rechazado') {
-                        // Rechazado
                         btnApply.innerText = '❌ Postulación rechazada';
                         btnApply.disabled = true;
                         btnApply.style.backgroundColor = '#DC2626';
@@ -199,9 +189,8 @@ async function verDetalles(id) {
                 }
             }
 
-            // Si es la empresa dueña del proyecto
             if (data.empresaId === user.uid) {
-                btnApply.innerText = ' Tu proyecto publicado';
+                btnApply.innerText = 'Tu proyecto publicado';
                 btnApply.disabled = true;
                 btnApply.style.backgroundColor = '#64748B';
             }
@@ -217,7 +206,6 @@ document.getElementById('closeModal').onclick = () => {
     document.getElementById('projectModal').style.display = "none";
 };
 
-// --- 3. CERRAR MODAL AL CLICK FUERA ---
 window.onclick = (event) => {
     if (event.target === document.getElementById('projectModal')) {
         document.getElementById('projectModal').style.display = "none";
@@ -243,7 +231,6 @@ onAuthStateChanged(auth, async (user) => {
                 roleBadge.className = 'role-badge ' + (data.rol === "Programador" ? "prog" : "emp");
             }
 
-            // Mini perfil y notificaciones → manejado por navbar.js
             import('./navbar.js').then(m => m.iniciarNavbar());
 
             cargarProyectos();
@@ -254,18 +241,14 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// Slider presupuesto
 document.getElementById('budgetRange').addEventListener('input', (e) => {
     document.getElementById('budgetValue').innerText = `$${e.target.value}`;
     filtrarAhorra();
 });
 
-// Checkboxes
 document.querySelectorAll('.filter-check').forEach(check => {
     check.addEventListener('change', filtrarAhorra);
 });
-
-// Cerrar Sesión → manejado por navbar.js
 
 // --- LÓGICA DE POSTULACIÓN ---
 async function handlePostulacion() {
@@ -392,8 +375,8 @@ window.gestionarPostulacion = async (id, nuevoEstado) => {
         alert("Hubo un error al procesar la solicitud.");
     }
 };
+
 // --- WORKSPACE EN SIDEBAR ---
-// BUG 2 + BUG 3 FIX
 async function cargarWorkspaceSidebar(uid, rol) {
     const cont = document.getElementById('workspaceList');
     if (!cont) return;
@@ -410,7 +393,7 @@ async function cargarWorkspaceSidebar(uid, rol) {
             postulaciones = snap.docs.map(d => ({ id: d.id, ...d.data() }))
                 .filter(p => p.contratoFirmadoEmpresa && p.contratoFirmadoProgramador
                           && p.estadoProyecto !== 'baja');
-            // Solo un workspace por proyecto (deduplicar)
+            // Deduplicar por proyectoId
             const _vistos = new Set();
             postulaciones = postulaciones.filter(p => {
                 if (_vistos.has(p.proyectoId)) return false;
@@ -446,7 +429,7 @@ async function cargarWorkspaceSidebar(uid, rol) {
         for (const p of postulaciones) {
             const esCompletado = p.estadoProyecto === 'completado';
 
-            // Verificar si ya valoró
+            // ── FIX: verificar si ya valoró antes de mostrar el botón "Valorar" ──
             let yaValoro = false;
             if (esCompletado) {
                 const rolKey  = rol === 'Empresa' ? 'empresa' : 'programador';
@@ -454,19 +437,22 @@ async function cargarWorkspaceSidebar(uid, rol) {
                 yaValoro = valSnap.exists();
             }
 
-            // Proyectos completados siempre aparecen en sidebar
+            // Si ya valoró y el proyecto está completado → no mostrar en sidebar
+            if (esCompletado && yaValoro) continue;
 
             alguno = true;
             const btn = document.createElement('button');
 
-            if (esCompletado) {
+            if (esCompletado && !yaValoro) {
+                // Completado pero pendiente valorar
                 btn.className = 'btn-workspace-sidebar';
                 btn.innerHTML = `
-                    <span class="ws-dot" style="background:#10B981;"></span>
+                    <span class="ws-dot" style="background:#F59E0B;"></span>
                     <span class="ws-titulo">${p.proyectoTitulo || 'Proyecto'}</span>
                     <span style="font-size:10px;color:#D97706;font-weight:700;white-space:nowrap;">⭐ Valorar</span>`;
                 btn.onclick = () => window.location.href = `valoracion.html?postulacionId=${p.id}`;
             } else {
+                // Workspace activo
                 btn.className = 'btn-workspace-sidebar';
                 btn.innerHTML = `
                     <span class="ws-dot"></span>
