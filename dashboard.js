@@ -16,6 +16,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let todosLosProyectos = [];
+let terminoBusqueda   = '';
 
 // --- 1. CARGAR PROYECTOS ---
 async function cargarProyectos() {
@@ -24,10 +25,36 @@ async function cargarProyectos() {
     try {
         const q = query(collection(db, "proyectos"), where("estado", "==", "activo"));
         const snap = await getDocs(q);
-        todosLosProyectos = [];
+        const proyectosBrutos = [];
         snap.forEach(doc => {
-            todosLosProyectos.push({ id: doc.id, ...doc.data() });
+            proyectosBrutos.push({ id: doc.id, ...doc.data() });
         });
+
+        // FIX: excluir proyectos que ya tienen postulación completada
+        // o candidato aceptado con contrato firmado por ambas partes
+        todosLosProyectos = [];
+        for (const proyecto of proyectosBrutos) {
+            const postuSnap = await getDocs(query(
+                collection(db, "postulaciones"),
+                where("proyectoId", "==", proyecto.id),
+                where("estadoProyecto", "==", "completado")
+            ));
+            if (!postuSnap.empty) continue;
+
+            const aceptadoSnap = await getDocs(query(
+                collection(db, "postulaciones"),
+                where("proyectoId", "==", proyecto.id),
+                where("estado", "==", "aceptado")
+            ));
+            const tieneAceptadoFirmado = aceptadoSnap.docs.some(d => {
+                const data = d.data();
+                return data.contratoFirmadoEmpresa && data.contratoFirmadoProgramador;
+            });
+            if (!tieneAceptadoFirmado) {
+                todosLosProyectos.push(proyecto);
+            }
+        }
+
         renderizarProyectos(todosLosProyectos);
     } catch (error) { console.error("Error:", error); }
 }
@@ -71,6 +98,8 @@ function filtrarAhorra() {
         duracion: checksMarcados.filter(c => c.dataset.tipo === "duracion").map(c => c.value)
     };
 
+    const termino = terminoBusqueda.toLowerCase().trim();
+
     const resultados = todosLosProyectos.filter(p => {
         const cumplePresupuesto = Number(p.presupuesto) <= presupuestoMax;
         const cumpleNivel = filtros.nivel.length === 0 || filtros.nivel.includes(p.nivel);
@@ -84,7 +113,15 @@ function filtrarAhorra() {
                 return false;
             });
         }
-        return cumplePresupuesto && cumpleNivel && cumpleDuracion;
+        // Búsqueda por texto: título, descripción y tags
+        let cumpleBusqueda = true;
+        if (termino) {
+            const enTitulo = (p.titulo || '').toLowerCase().includes(termino);
+            const enDesc   = (p.descripcion || '').toLowerCase().includes(termino);
+            const enTags   = (p.tags || []).some(t => t.toLowerCase().includes(termino));
+            cumpleBusqueda = enTitulo || enDesc || enTags;
+        }
+        return cumplePresupuesto && cumpleNivel && cumpleDuracion && cumpleBusqueda;
     });
 
     renderizarProyectos(resultados);
@@ -250,6 +287,21 @@ document.querySelectorAll('.filter-check').forEach(check => {
     check.addEventListener('change', filtrarAhorra);
 });
 
+// Buscador por texto
+document.getElementById('searchInput').addEventListener('input', (e) => {
+    terminoBusqueda = e.target.value;
+    const btnClear = document.getElementById('btnClearSearch');
+    if (btnClear) btnClear.style.display = terminoBusqueda ? 'block' : 'none';
+    filtrarAhorra();
+});
+
+document.getElementById('btnClearSearch').addEventListener('click', () => {
+    document.getElementById('searchInput').value = '';
+    terminoBusqueda = '';
+    document.getElementById('btnClearSearch').style.display = 'none';
+    filtrarAhorra();
+});
+
 // --- LÓGICA DE POSTULACIÓN ---
 async function handlePostulacion() {
     const user = auth.currentUser;
@@ -360,6 +412,29 @@ window.gestionarPostulacion = async (id, nuevoEstado) => {
             fecha: new Date().toISOString(),
             leido: false
         });
+
+        // FIX: si se aceptó a un candidato, rechazar automáticamente los demás
+        // y marcar el proyecto como "en_proceso" para que deje de aparecer en el dashboard
+        if (nuevoEstado === 'aceptado') {
+            // Rechazar todas las demás postulaciones pendientes del mismo proyecto
+            const otrasSnap = await getDocs(query(
+                collection(db, "postulaciones"),
+                where("proyectoId", "==", postuData.proyectoId),
+                where("estado", "==", "pendiente")
+            ));
+            for (const otraDoc of otrasSnap.docs) {
+                if (otraDoc.id === id) continue;
+                await updateDoc(doc(db, "postulaciones", otraDoc.id), { estado: "rechazado" });
+                await addDoc(collection(db, "notificaciones"), {
+                    para: otraDoc.data().programadorId,
+                    mensaje: `Tu postulación para el proyecto fue rechazada porque se seleccionó a otro candidato.`,
+                    fecha: new Date().toISOString(),
+                    leido: false
+                });
+            }
+            // Marcar proyecto como en_proceso para que salga del dashboard
+            await updateDoc(doc(db, "proyectos", postuData.proyectoId), { estado: "en_proceso" });
+        }
 
         const card = document.getElementById(`card-${id}`);
         if (card) {

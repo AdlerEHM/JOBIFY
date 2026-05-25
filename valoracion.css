@@ -277,3 +277,48 @@
     flex-shrink: 0;
 }
 .btn-completar-proyecto:hover { background: #059669; }
+/* ─── RECIBO DE PAGO ─── */
+.recibo-pago-box {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #BBF7D0;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(16,185,129,0.08);
+}
+.recibo-header {
+    background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+    padding: 24px;
+    text-align: center;
+}
+.recibo-check {
+    width: 52px; height: 52px;
+    background: #10B981; color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 700;
+    margin: 0 auto 12px;
+}
+.recibo-header h3 { font-size: 18px; font-weight: 700; color: #065F46; margin: 0 0 4px; }
+.recibo-header p  { font-size: 13px; color: #047857; margin: 0; }
+.recibo-detalles  { padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; }
+.recibo-fila {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid #F0FDF4; font-size: 13px;
+}
+.recibo-fila:last-child { border-bottom: none; }
+.recibo-fila span     { color: #6B7280; }
+.recibo-fila strong   { color: #111827; text-align: right; max-width: 60%; word-break: break-all; }
+
+/* ─── PAGO COMPLETADO BOX ─── */
+.pago-completado-box {
+    background: white; border-radius: 16px;
+    border: 1px solid #BBF7D0; padding: 32px; text-align: center;
+}
+.pago-check {
+    width: 52px; height: 52px;
+    background: #10B981; color: white; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700; margin: 0 auto 16px;
+}
+.pago-completado-box h3 { font-size: 18px; font-weight: 700; color: #065F46; margin: 0 0 8px; }
+.pago-completado-box p  { font-size: 13px; color: #047857; margin: 0 0 20px; }

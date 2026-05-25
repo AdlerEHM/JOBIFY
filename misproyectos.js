@@ -319,7 +319,7 @@ function renderPublicacionesEmp(proyectos) {
     const panel  = document.getElementById('panel-publicaciones');
     // Bug 3 fix: excluir proyectos activos que ya tienen una postulación completada
     const activos = proyectos.filter(p => {
-        if (p.estado !== 'activo') return false;
+        if (p.estado !== 'activo' && p.estado !== 'en_proceso') return false;
         const tieneCompletado = p.postulaciones.some(ps => ps.estadoProyecto === 'completado');
         return !tieneCompletado;
     });
@@ -449,6 +449,12 @@ function renderEnCursoEmp(proyectos) {
     const panel = document.getElementById('panel-encurso');
     const items = [];
     proyectos.forEach(p => {
+        // FIX: verificar que el proyecto no tenga ninguna postulación en baja
+        // ya que cuando el workspace marca baja, el campo estadoProyecto puede
+        // quedar undefined en registros viejos y pasar el filtro incorrectamente
+        const tieneBaja = p.postulaciones.some(ps => ps.estadoProyecto === 'baja');
+        if (tieneBaja) return;
+
         const pos = p.postulaciones.find(ps =>
             ps.estado === 'aceptado' &&
             ps.contratoFirmadoEmpresa &&
@@ -506,7 +512,7 @@ async function renderHistorialEmp(proyectos) {
     const items = [];
 
     proyectos.forEach(p => {
-        if (p.estado !== 'activo') { items.push({ proyecto: p, tipo: 'cancelado' }); return; }
+        if (p.estado !== 'activo' && p.estado !== 'en_proceso') { items.push({ proyecto: p, tipo: 'cancelado' }); return; }
         const completado = p.postulaciones.find(ps => ps.estadoProyecto === 'completado');
         const baja       = p.postulaciones.find(ps => ps.estadoProyecto === 'baja');
         if (completado) items.push({ proyecto: p, postulacion: completado, tipo: 'completado' });
@@ -581,26 +587,49 @@ window.gestionarCandidato = async (postulacionId, nuevoEstado) => {
             fecha: new Date().toISOString(), leido: false
         });
 
-        // Correo aceptado/rechazado → manejado por Cloud Function onCambioPostulacion
-
+        // FIX: al aceptar, rechazar todas las demás postulaciones pendientes
+        // y marcar el proyecto como en_proceso para que salga del dashboard
         if (nuevoEstado === 'aceptado') {
+            const otrasSnap = await getDocs(query(
+                collection(db, "postulaciones"),
+                where("proyectoId", "==", postuData.proyectoId),
+                where("estado", "==", "pendiente")
+            ));
+            for (const otraDoc of otrasSnap.docs) {
+                if (otraDoc.id === postulacionId) continue;
+                await updateDoc(doc(db, "postulaciones", otraDoc.id), { estado: "rechazado" });
+                await addDoc(collection(db, "notificaciones"), {
+                    para: otraDoc.data().programadorId,
+                    mensaje: `Tu postulación para "${postuData.proyectoTitulo}" fue rechazada porque se seleccionó a otro candidato.`,
+                    fecha: new Date().toISOString(), leido: false
+                });
+            }
+            await updateDoc(doc(db, "proyectos", postuData.proyectoId), { estado: "en_proceso" });
             window.location.href = `contrato.html?postulacionId=${postulacionId}`;
-        } else { window.location.reload(); }
+        } else {
+            window.location.reload();
+        }
     } catch (e) { alert("Error: " + e.message); }
 };
 
 window.darDeBaja = async (postulacionId) => {
-    if (!confirm("¿Dar de baja al programador? Esta acción quedará en el historial.")) return;
+    if (!confirm("¿Dar de baja al programador? El proyecto será cancelado.")) return;
     try {
-        await updateDoc(doc(db, "postulaciones", postulacionId), { estadoProyecto: 'baja' });
         const postuSnap = await getDoc(doc(db, "postulaciones", postulacionId));
         const postuData = postuSnap.data();
+
+        // Marcar postulación como baja
+        await updateDoc(doc(db, "postulaciones", postulacionId), { estadoProyecto: 'baja' });
+
+        // Cancelar el proyecto — va al historial como cancelado
+        await updateDoc(doc(db, "proyectos", postuData.proyectoId), { estado: 'cancelado' });
+
         await addDoc(collection(db, "notificaciones"), {
             para: postuData.programadorId,
-            mensaje: `Has sido dado de baja del proyecto "${postuData.proyectoTitulo}".`,
+            mensaje: `Has sido dado de baja del proyecto "${postuData.proyectoTitulo}". El proyecto fue cancelado.`,
             fecha: new Date().toISOString(), leido: false
         });
-        alert("Programador dado de baja.");
+        alert("Programador dado de baja y proyecto cancelado.");
         window.location.reload();
     } catch (e) { alert("Error: " + e.message); }
 };

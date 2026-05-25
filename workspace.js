@@ -79,6 +79,22 @@ onAuthStateChanged(auth, async (user) => {
     const proySnap = await getDoc(doc(db, "proyectos", postulacionData.proyectoId));
     proyectoData = proySnap.exists() ? proySnap.data() : {};
 
+    // Bloquear acceso si el proyecto fue cancelado
+    if (proyectoData.estado === 'cancelado') {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('chatBloqueado').style.display = 'flex';
+        document.getElementById('chatBloqueado').innerHTML = `
+            <div class="bloqueado-box">
+                <h3>Proyecto cancelado</h3>
+                <p>Este proyecto fue cancelado y el workspace ya no está disponible.</p>
+                <button class="btn-main" style="margin-top:16px;"
+                    onclick="window.location.href='misproyectos.html'">
+                    Ir a Mis Proyectos
+                </button>
+            </div>`;
+        return;
+    }
+
     const userSnap = await getDoc(doc(db, "usuarios", user.uid));
     rolActual = userSnap.data().rol;
 
@@ -128,6 +144,10 @@ onAuthStateChanged(auth, async (user) => {
 function configurarTabs() {
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+            if (btn.disabled) {
+                alert('Primero deben acordar el plan de hitos en la pestaña Calendario.');
+                return;
+            }
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             btn.classList.add('active');
@@ -184,15 +204,15 @@ async function verificarChat48h() {
             fechaBaja: new Date().toISOString()
         });
 
-        // Marcar proyecto como activo de nuevo (disponible para otros)
+        // Cancelar el proyecto — va directo al historial de empresa como cancelado
         await updateDoc(doc(db, 'proyectos', postulacionData.proyectoId), {
-            estado: 'activo'
+            estado: 'cancelado'
         });
 
         // Notificar a la empresa
         await addDoc(collection(db, 'notificaciones'), {
             para:    postulacionData.empresaId,
-            mensaje: `El programador ${postulacionData.nombreProgramador} no respondió en 48h y fue desvinculado del proyecto "${proyectoData.titulo || 'Proyecto'}". El proyecto vuelve a estar disponible.`,
+            mensaje: `El programador ${postulacionData.nombreProgramador} no respondió en 48h y fue dado de baja. El proyecto "${proyectoData.titulo || 'Proyecto'}" fue cancelado.`,
             fecha:   new Date().toISOString(),
             leido:   false
         });
@@ -601,47 +621,40 @@ function verificarTabFinalizar() {
     const tabFinalizar = document.getElementById('tabFinalizar');
     if (!tabFinalizar) return;
 
-    // Escuchar en tiempo real — se actualiza automáticamente cuando el plan se acepta
+    // Tab Finalizar siempre accesible — el contenido del panel maneja el estado
+    tabFinalizar.disabled = false;
+    tabFinalizar.style.opacity = '1';
+    tabFinalizar.style.cursor  = 'pointer';
+    tabFinalizar.title = '';
+
+    // El panel se actualiza en tiempo real según el estado del plan
     onSnapshot(doc(db, "postulaciones", postulacionId, "plan", "datos"), (planSnap) => {
         const planData    = planSnap.exists() ? planSnap.data() : {};
         const planAceptado = planData.estado === 'aceptado';
 
-        if (planAceptado) {
-            tabFinalizar.disabled = false;
-            tabFinalizar.style.opacity = '1';
-            tabFinalizar.style.cursor  = 'pointer';
-            tabFinalizar.title = '';
-        } else {
-            tabFinalizar.disabled = true;
-            tabFinalizar.style.opacity = '0.4';
-            tabFinalizar.style.cursor  = 'not-allowed';
-            tabFinalizar.title = 'Primero deben acordar y aceptar el plan de hitos';
+        // Solo actualizar el panel si el tab Finalizar NO está activo
+        // para no interrumpir si el usuario ya está viendo el contenido
+        const tabActivo = document.getElementById('tab-finalizar').classList.contains('active');
+        if (tabActivo) return;
 
-            const panel = document.getElementById('panelCompletar');
-            if (panel) {
-                panel.innerHTML = `
-                    <div style="text-align:center;padding:60px 20px;color:var(--text-muted);">
-                        <div style="font-size:48px;margin-bottom:16px;">📅</div>
-                        <h3 style="font-size:18px;font-weight:700;color:var(--text-main);margin-bottom:8px;">
-                            Plan de trabajo pendiente
-                        </h3>
-                        <p style="font-size:14px;line-height:1.6;max-width:360px;margin:0 auto;">
-                            Para finalizar el proyecto primero deben acordar y aceptar el plan de hitos
-                            en la pestaña <strong>Calendario</strong>.
-                        </p>
-                    </div>`;
-            }
+        const panel = document.getElementById('panelCompletar');
+        if (!panel) return;
+
+        if (!planAceptado && postulacionData.estadoProyecto !== 'completado') {
+            panel.innerHTML = `
+                <div style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+                    <div style="font-size:48px;margin-bottom:16px;">📅</div>
+                    <h3 style="font-size:18px;font-weight:700;color:var(--text-main);margin-bottom:8px;">
+                        Plan de trabajo pendiente
+                    </h3>
+                    <p style="font-size:14px;line-height:1.6;max-width:360px;margin:0 auto;">
+                        Para poder finalizar el proyecto primero deben acordar y aceptar el plan
+                        de hitos en la pestaña <strong>Calendario</strong>. Una vez aceptado
+                        podrás proceder con el pago y cierre del proyecto.
+                    </p>
+                </div>`;
         }
     });
-
-    // Bloquear click si está deshabilitado
-    tabFinalizar.addEventListener('click', (e) => {
-        if (tabFinalizar.disabled) {
-            e.stopPropagation();
-            e.preventDefault();
-            alert('Primero deben acordar el plan de hitos en la pestaña Calendario.');
-        }
-    }, true);
 }
 
 
