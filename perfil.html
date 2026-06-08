@@ -6,103 +6,98 @@
     <title>Jobify - Mi Perfil</title>
     <link rel="stylesheet" href="global.css">
     <link rel="stylesheet" href="perfil.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <!-- TOP BAR -->
     <header class="perfil-topbar">
-        <button class="btn-back" onclick="window.location.href='dashboard.html'" id="btnVolverDash" style="display:none;">← Volver</button>
+        <button class="btn-back" onclick="window.location.href='dashboard.html'"
+            id="btnVolverDash" style="display:none;">← Volver</button>
         <span class="perfil-logo">JOBIFY</span>
         <div id="errorMsg" class="error-msg" style="display:none;"></div>
     </header>
 
-    <!-- LAYOUT DOS COLUMNAS -->
     <div class="perfil-layout">
 
-        <!-- COLUMNA IZQUIERDA: datos del perfil -->
+        <!-- SIDEBAR -->
         <aside class="perfil-sidebar">
             <div class="sidebar-inner">
-                <h2 class="sidebar-titulo" id="perfilTitulo">Configura tu Perfil</h2>
-                <p class="sidebar-subtitle">Completa tu información para empezar a usar la plataforma.</p>
 
-                <!-- FOTO -->
                 <div class="foto-group">
                     <div class="foto-preview-wrapper">
                         <img id="fotoPreview" src="" alt="Foto" style="display:none;" class="foto-preview">
-                        <div id="fotoPlaceholder" class="foto-placeholder">📷</div>
+                        <div id="fotoPlaceholder" class="foto-placeholder">+</div>
                     </div>
                     <div class="foto-info">
                         <label class="field-label">Foto de perfil</label>
-                        <input type="file" id="profileImage" accept="image/png, image/jpeg, image/webp">
+                        <input type="file" id="profileImage" accept="image/png,image/jpeg,image/webp">
                         <small id="uploadStatus" class="upload-status"></small>
                     </div>
                 </div>
 
-                <!-- NOMBRE -->
+                <h2 class="sidebar-titulo" id="perfilTitulo">Mi Perfil</h2>
+                <p class="sidebar-subtitle">Completa tu información para usar la plataforma</p>
+
                 <div class="form-group">
                     <label class="field-label">Nombre público <span class="required">*</span></label>
-                    <input type="text" id="displayName" placeholder="Tu nombre completo o empresa">
+                    <input type="text" id="displayName" placeholder="Tu nombre o empresa">
                 </div>
 
-                <!-- CAMPOS EMPRESA -->
                 <div id="companyFields" style="display:none;">
-                    <div class="exclusive-fields">
-                        <div class="form-group">
-                            <label class="field-label">Industria / Sector <span class="required">*</span></label>
-                            <select id="companyIndustria" class="field-select">
-                                <option value="">Selecciona una industria</option>
-                                <option value="Tecnología">Tecnología</option>
-                                <option value="Educación">Educación</option>
-                                <option value="Salud">Salud</option>
-                                <option value="Finanzas">Finanzas</option>
-                                <option value="Comercio electrónico">Comercio electrónico</option>
-                                <option value="Marketing y publicidad">Marketing y publicidad</option>
-                                <option value="Manufactura">Manufactura</option>
-                                <option value="Logística">Logística</option>
-                                <option value="Entretenimiento">Entretenimiento</option>
-                                <option value="Consultoría">Consultoría</option>
-                                <option value="Gobierno">Gobierno</option>
-                                <option value="Otro">Otro</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="field-label">Tamaño de la empresa</label>
-                            <select id="companyTamano" class="field-select">
-                                <option value="">Selecciona el tamaño</option>
-                                <option value="1-10 empleados">1-10 empleados</option>
-                                <option value="11-50 empleados">11-50 empleados</option>
-                                <option value="51-200 empleados">51-200 empleados</option>
-                                <option value="201-500 empleados">201-500 empleados</option>
-                                <option value="500+ empleados">500+ empleados</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="field-label">Ubicación</label>
-                            <input type="text" id="companyUbicacion" placeholder="Ciudad, País">
-                        </div>
-                        <div class="form-group">
-                            <label class="field-label">Sitio web</label>
-                            <input type="url" id="companyWeb" placeholder="https://www.tuempresa.com">
-                        </div>
+                    <div class="form-group">
+                        <label class="field-label">Industria <span class="required">*</span></label>
+                        <select id="companyIndustria" class="field-select">
+                            <option value="">Selecciona una industria</option>
+                            <option value="Tecnología">Tecnología</option>
+                            <option value="Educación">Educación</option>
+                            <option value="Salud">Salud</option>
+                            <option value="Finanzas">Finanzas</option>
+                            <option value="Comercio electrónico">Comercio electrónico</option>
+                            <option value="Marketing y publicidad">Marketing y publicidad</option>
+                            <option value="Manufactura">Manufactura</option>
+                            <option value="Logística">Logística</option>
+                            <option value="Entretenimiento">Entretenimiento</option>
+                            <option value="Consultoría">Consultoría</option>
+                            <option value="Gobierno">Gobierno</option>
+                            <option value="Otro">Otro</option>
+                        </select>
                     </div>
-                    <div class="form-group" style="margin-top:16px;">
-                        <label class="field-label">Descripción de la empresa <span class="required">*</span></label>
-                        <textarea id="companyBio" placeholder="Describe a qué se dedica tu empresa, su misión y qué tipo de proyectos busca..."></textarea>
+                    <div class="form-group">
+                        <label class="field-label">Tamaño</label>
+                        <select id="companyTamano" class="field-select">
+                            <option value="">Selecciona el tamaño</option>
+                            <option value="1-10 empleados">1-10 empleados</option>
+                            <option value="11-50 empleados">11-50 empleados</option>
+                            <option value="51-200 empleados">51-200 empleados</option>
+                            <option value="201-500 empleados">201-500 empleados</option>
+                            <option value="500+ empleados">500+ empleados</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">Ubicación</label>
+                        <input type="text" id="companyUbicacion" placeholder="Ciudad, País">
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">Sitio web</label>
+                        <input type="url" id="companyWeb" placeholder="https://tuempresa.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="field-label">Descripción <span class="required">*</span></label>
+                        <textarea id="companyBio" placeholder="Describe tu empresa..."></textarea>
                         <div id="bioCounter" class="bio-counter">0 / 1000 palabras</div>
                     </div>
                 </div>
 
-                <!-- CAMPOS PROGRAMADOR -->
                 <div id="devFields" style="display:none;">
-                    <div class="exclusive-fields">
+                    <div class="form-group">
                         <label class="field-label">Habilidades <span class="required">*</span></label>
-                        <p class="field-hint">Selecciona los lenguajes y tecnologías que dominas.</p>
+                        <p class="field-hint">Selecciona las tecnologías que dominas</p>
                         <div id="skillsCloud" class="skills-cloud"></div>
                     </div>
-                    <div class="form-group" style="margin-top:16px;">
-                        <label class="field-label">Rango de pago sugerido (USD)</label>
+                    <div class="form-group">
+                        <label class="field-label">Rango de pago (USD)</label>
                         <input type="number" id="payRange" placeholder="Ej: 500" min="0">
-                        <small class="field-hint">¿Cuánto cobras aproximadamente por proyecto?</small>
+                        <small class="field-hint">Cuánto cobras por proyecto aproximadamente</small>
                     </div>
                 </div>
 
@@ -110,126 +105,108 @@
             </div>
         </aside>
 
-        <!-- COLUMNA DERECHA: portafolio (programadores) o proyectos publicados (empresas) -->
+        <!-- COLUMNA DERECHA CON TABS -->
         <main class="perfil-main" id="portafolioSection" style="display:none;">
-            <!-- SECCIÓN PROGRAMADOR: portafolio -->
-            <div id="seccionPortafolio" style="display:none;">
-                <div class="portafolio-header">
-                    <div>
-                        <h2 class="portafolio-titulo">Portafolio de Proyectos</h2>
-                        <p class="portafolio-subtitle">Muestra tu trabajo a las empresas. Cada proyecto aumenta tus posibilidades de ser contratado.</p>
-                    </div>
-                    <button id="btnAgregarProyecto" class="btn-agregar-portafolio">+ Agregar proyecto</button>
-                </div>
-                <div class="portafolio-grid" id="portafolioItems">
-                    <div class="portafolio-empty" id="portafolioEmpty">
-                        <h3>Sin proyectos aún</h3>
-                        <p>Agrega tus mejores proyectos para destacar ante las empresas.</p>
-                    </div>
-                </div>
+
+            <div class="perfil-tabs-bar">
+                <button class="perfil-tab active" data-panel="panel-trabajo">Trabajo</button>
+                <button class="perfil-tab" data-panel="panel-valoraciones">Valoraciones</button>
             </div>
 
-            <!-- SECCIÓN EMPRESA: proyectos publicados -->
-            <div id="seccionEmpresa" style="display:none;">
-                <div class="portafolio-header">
-                    <div>
-                        <h2 class="portafolio-titulo">Proyectos Publicados</h2>
-                        <p class="portafolio-subtitle">Estos son los proyectos que has publicado en la plataforma.</p>
+            <!-- PANEL TRABAJO -->
+            <div id="panel-trabajo" class="perfil-panel">
+
+                <div id="seccionPortafolio" style="display:none;">
+                    <div class="panel-header">
+                        <div>
+                            <h2 class="panel-titulo">Portafolio</h2>
+                            <p class="panel-subtitulo">Tus proyectos personales y profesionales</p>
+                        </div>
+                        <button id="btnAgregarProyecto" class="btn-agregar">+ Agregar</button>
                     </div>
-                    <button class="btn-agregar-portafolio" onclick="window.location.href='publicar.html'">+ Publicar proyecto</button>
-                </div>
-                <div id="listaProyectosEmpresa" class="portafolio-grid">
-                    <div class="portafolio-empty" id="empresaProyectosEmpty">
-                        <h3>Sin proyectos publicados</h3>
-                        <p>Publica tu primer proyecto para encontrar al programador ideal.</p>
+                    <div class="portafolio-grid" id="portafolioItems">
+                        <div class="empty-state" id="portafolioEmpty">
+                            <div class="empty-icon">■</div>
+                            <h3>Sin proyectos aún</h3>
+                            <p>Agrega tus mejores proyectos para destacar</p>
+                        </div>
                     </div>
                 </div>
+
+                <div id="seccionEmpresa" style="display:none;">
+                    <div class="panel-header">
+                        <div>
+                            <h2 class="panel-titulo">Proyectos Publicados</h2>
+                            <p class="panel-subtitulo">Proyectos que has publicado en la plataforma</p>
+                        </div>
+                        <button class="btn-agregar" onclick="window.location.href='publicar.html'">+ Publicar</button>
+                    </div>
+                    <div id="listaProyectosEmpresa" class="portafolio-grid">
+                        <div class="empty-state" id="empresaProyectosEmpty">
+                            <div class="empty-icon">■</div>
+                            <h3>Sin proyectos publicados</h3>
+                            <p>Publica tu primer proyecto</p>
+                        </div>
+                    </div>
+                </div>
+
             </div>
+
+            <!-- PANEL VALORACIONES (MÓDULO 6) -->
+            <div id="panel-valoraciones" class="perfil-panel" style="display:none;">
+
+                <!-- MÓDULO 6.3/6.4: Sanción -->
+                <div id="bannerSancion" class="sancion-banner" style="display:none;">
+                    <div class="sancion-inner">
+                        <div class="sancion-icono">!</div>
+                        <div class="sancion-body">
+                            <strong>Cuenta con restricciones temporales</strong>
+                            <p>Valoraciones negativas consecutivas. Recuperación: <span id="diasRecuperacion">0</span>/7 días</p>
+                            <div class="barra-track"><div id="barraRecuperacion" class="barra-fill"></div></div>
+                            <span id="diasRestantes" class="sancion-nota"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MÓDULO 6.1/6.2: Reputación y etiquetas -->
+                <div class="reputacion-card">
+                    <div class="rep-hero">
+                        <div class="rep-score-block">
+                            <span id="promedioNum" class="score-num">—</span>
+                            <span class="score-label">de 5</span>
+                        </div>
+                        <div class="rep-center">
+                            <div id="promedioEstrellas" class="rep-stars">★★★★★</div>
+                            <p id="totalValoraciones" class="rep-total">Cargando...</p>
+                        </div>
+                        <div id="barrasDistribucion" class="barras-dist"></div>
+                    </div>
+
+                    <div class="rep-tabs">
+                        <button id="btnTabPos" class="rep-tab active-pos" onclick="switchTab('positivas')">
+                            Positivas (<span id="cntPos">0</span>)
+                        </button>
+                        <button id="btnTabNeg" class="rep-tab" onclick="switchTab('negativas')">
+                            Negativas (<span id="cntNeg">0</span>)
+                        </button>
+                    </div>
+
+                    <div id="listaPositivas" class="rep-lista">
+                        <p class="rep-empty">Cargando valoraciones...</p>
+                    </div>
+                    <div id="listaNegativas" class="rep-lista" style="display:none;"></div>
+                </div>
+
+            </div>
+
         </main>
-
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- MÓDULO 6: Reputación, Alertas y Sanciones                       -->
-    <!-- Siempre visible debajo del layout principal                      -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <div style="max-width:1200px;margin:0 auto;padding:0 32px 64px;display:flex;gap:24px;flex-wrap:wrap;">
-
-        <!-- MÓDULO 6.3 y 6.4: Banner de sanción (oculto por defecto, JS lo muestra si aplica) -->
-        <div id="bannerSancion" style="display:none;width:100%;
-            background:#FEF2F2;border:1px solid #FCA5A5;border-radius:12px;padding:16px 20px;">
-            <div style="display:flex;align-items:center;gap:12px;">
-                <span style="font-size:28px;">⚠️</span>
-                <div style="flex:1;">
-                    <strong style="color:#DC2626;font-size:14px;">Cuenta con restricciones temporales</strong>
-                    <p style="font-size:12px;color:#EF4444;margin:4px 0 8px;">
-                        Recibiste valoraciones negativas consecutivas.
-                        Contador de recuperación: <span id="diasRecuperacion">0</span>/7 días
-                    </p>
-                    <div style="background:#FCA5A5;border-radius:6px;height:8px;width:100%;">
-                        <div id="barraRecuperacion" style="background:#DC2626;height:8px;
-                            border-radius:6px;width:0%;transition:width 0.3s;"></div>
-                    </div>
-                    <p id="diasRestantes" style="font-size:11px;color:#9CA3AF;margin:4px 0 0;"></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- MÓDULO 6.1 y 6.2: Sección de valoraciones y etiquetas de desempeño -->
-        <div style="flex:1;min-width:300px;">
-            <div style="background:white;border-radius:16px;border:1px solid #E5E7EB;padding:28px;">
-
-                <h2 style="font-size:20px;font-weight:700;color:#111827;margin:0 0 4px;">
-                    Valoraciones recibidas
-                </h2>
-                <p id="totalValoraciones" style="font-size:13px;color:#6B7280;margin:0 0 20px;">
-                    Cargando...
-                </p>
-
-                <!-- Resumen promedio -->
-                <div id="resumenReputacion" style="display:flex;align-items:center;gap:24px;
-                    padding:20px;background:#F9FAFB;border-radius:12px;margin-bottom:24px;flex-wrap:wrap;">
-                    <div style="text-align:center;min-width:80px;">
-                        <div id="promedioNum" style="font-size:42px;font-weight:800;color:#111827;line-height:1;">-</div>
-                        <div id="promedioEstrellas" style="font-size:18px;margin:4px 0;">☆☆☆☆☆</div>
-                        <div id="totalNum" style="font-size:12px;color:#9CA3AF;margin-top:4px;">0 reseñas</div>
-                    </div>
-                    <div id="barrasDistribucion" style="flex:1;min-width:160px;"></div>
-                </div>
-
-                <!-- Tabs positivas / negativas -->
-                <div style="display:flex;gap:8px;margin-bottom:16px;">
-                    <button id="btnTabPos" onclick="switchTab('positivas')"
-                        style="padding:9px 18px;border-radius:8px;border:none;cursor:pointer;
-                               font-weight:600;font-size:13px;background:#D1FAE5;color:#065F46;">
-                        👍 Positivas (<span id="cntPos">0</span>)
-                    </button>
-                    <button id="btnTabNeg" onclick="switchTab('negativas')"
-                        style="padding:9px 18px;border-radius:8px;cursor:pointer;font-weight:600;
-                               font-size:13px;border:1.5px solid #E5E7EB;background:white;color:#6B7280;">
-                        👎 Negativas (<span id="cntNeg">0</span>)
-                    </button>
-                </div>
-
-                <!-- Listas de reseñas -->
-                <div id="listaPositivas">
-                    <p style="color:#9CA3AF;font-size:13px;text-align:center;padding:16px 0;">
-                        Cargando valoraciones...
-                    </p>
-                </div>
-                <div id="listaNegativas" style="display:none;"></div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- MÓDULO 6.5: Alertas de 10 días — contenedor flotante -->
-    <div id="alertasEntrega" style="position:fixed;bottom:24px;right:24px;z-index:9999;
-        display:flex;flex-direction:column;gap:8px;max-width:300px;"></div>
+    <!-- MÓDULO 6.5: Alertas flotantes -->
+    <div id="alertasEntrega" class="alertas-container"></div>
 
     <script type="module" src="perfil.js"></script>
     <script type="module">
-        // Mostrar botón volver solo si el perfil ya está completo
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -241,9 +218,17 @@
         onAuthStateChanged(auth, async (user) => {
             if (!user) return;
             const snap = await getDoc(doc(db, "usuarios", user.uid));
-            if (snap.exists() && snap.data().perfilCompleto) {
+            if (snap.exists() && snap.data().perfilCompleto)
                 document.getElementById('btnVolverDash').style.display = 'block';
-            }
+        });
+
+        document.querySelectorAll('.perfil-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.perfil-tab').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.perfil-panel').forEach(p => p.style.display = 'none');
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.panel).style.display = 'block';
+            });
         });
     </script>
 </body>

@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, addDoc, collection, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const firebaseConfig = {
@@ -84,6 +84,11 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('portafolioEmpty').style.display = 'none';
         }
         portafolioItems.forEach((item, i) => renderPortafolioItem(item, i));
+    }
+
+    // Cargar proyectos de Jobify completados en el portafolio del programador
+    if (rolUsuario === 'Programador') {
+        await cargarProyectosJobifyEnPortafolio(user.uid);
     }
 
     // MÓDULO 6 — llamar todas las funciones
@@ -438,35 +443,39 @@ function mostrarError(msg) {
 // ═══════════════════════════════════════════════════
 async function cargarReputacion(uid) {
     // Traer todas las valoraciones donde este usuario fue valuado
+    // MÓDULO 6.1: traer valoraciones sin orderBy para evitar índice compuesto
     const snap = await getDocs(query(
         collection(db, 'valoraciones'),
-        where('valuadoId', '==', uid),
-        orderBy('fecha', 'desc')
+        where('valuadoId', '==', uid)
     ));
 
-    const vals = snap.docs.map(d => d.data());
+    // Ordenar en el cliente por fecha descendente
+    const vals = snap.docs.map(d => d.data())
+        .sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
+
+    // Helper seguro — no falla si el panel está oculto al cargar
+    const setEl   = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+    const setHTML = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
 
     // Actualizar contador total
-    document.getElementById('totalValoraciones').innerText =
+    setEl('totalValoraciones',
         vals.length === 0
             ? 'Aún no tienes valoraciones'
-            : `${vals.length} valoración${vals.length !== 1 ? 'es' : ''} recibida${vals.length !== 1 ? 's' : ''}`;
+            : `${vals.length} valoración${vals.length !== 1 ? 'es' : ''} recibida${vals.length !== 1 ? 's' : ''}`);
 
     if (vals.length === 0) {
-        document.getElementById('listaPositivas').innerHTML =
-            '<p style="color:#9CA3AF;font-size:13px;text-align:center;padding:24px 0;">Sin valoraciones aún. Completa proyectos para recibirlas.</p>';
-        document.getElementById('promedioNum').innerText = '-';
-        document.getElementById('promedioEstrellas').innerText = '☆☆☆☆☆';
-        document.getElementById('totalNum').innerText = '0 reseñas';
+        setHTML('listaPositivas', '<p class="rep-empty">Sin valoraciones aún. Completa proyectos para recibirlas.</p>');
+        setEl('promedioNum', '-');
+        setEl('promedioEstrellas', '☆☆☆☆☆');
+        setEl('totalNum', '0 reseñas');
         return;
     }
 
     // Calcular promedio
     const promedio = (vals.reduce((s, v) => s + v.estrellas, 0) / vals.length).toFixed(1);
-    document.getElementById('promedioNum').innerText = promedio;
-    document.getElementById('promedioEstrellas').innerText =
-        '⭐'.repeat(Math.round(promedio)) + '☆'.repeat(5 - Math.round(promedio));
-    document.getElementById('totalNum').innerText = `${vals.length} reseña${vals.length !== 1 ? 's' : ''}`;
+    setEl('promedioNum', promedio);
+    setEl('promedioEstrellas', '★'.repeat(Math.round(promedio)) + '☆'.repeat(5 - Math.round(promedio)));
+    setEl('totalNum', `${vals.length} reseña${vals.length !== 1 ? 's' : ''}`);
 
     // Barras de distribución por estrella
     const barras = document.getElementById('barrasDistribucion');
@@ -484,48 +493,68 @@ async function cargarReputacion(uid) {
             </div>`;
     }).join('');
 
+    // Enriquecer valoraciones con título del proyecto si no lo tienen
+    for (const v of vals) {
+        if (!v.proyectoTitulo && v.proyectoId) {
+            try {
+                const proySnap = await getDoc(doc(db, 'proyectos', v.proyectoId));
+                if (proySnap.exists()) v.proyectoTitulo = proySnap.data().titulo;
+            } catch(e) { /* si falla, no importa */ }
+        }
+    }
+
     // Separar top 5 positivas y negativas
     const positivas = vals.filter(v => v.estrellas >= 4).slice(0, 5);
     const negativas  = vals.filter(v => v.estrellas <= 2).slice(0, 5);
 
     // Actualizar contadores en los tabs
-    document.getElementById('cntPos').innerText = positivas.length;
-    document.getElementById('cntNeg').innerText = negativas.length;
+    setEl('cntPos', positivas.length);
+    setEl('cntNeg', negativas.length);
 
     // Render positivas
-    document.getElementById('listaPositivas').innerHTML =
+    setHTML('listaPositivas',
         positivas.length === 0
-            ? '<p style="color:#9CA3AF;font-size:13px;text-align:center;padding:16px 0;">Sin reseñas positivas aún</p>'
-            : positivas.map(v => renderReseña(v)).join('');
+            ? '<p class="rep-empty">Sin reseñas positivas aún</p>'
+            : positivas.map(v => renderReseña(v)).join(''));
 
     // Render negativas
-    document.getElementById('listaNegativas').innerHTML =
+    setHTML('listaNegativas',
         negativas.length === 0
-            ? '<p style="color:#9CA3AF;font-size:13px;text-align:center;padding:16px 0;">Sin reseñas negativas aún</p>'
-            : negativas.map(v => renderReseña(v)).join('');
+            ? '<p class="rep-empty">Sin reseñas negativas aún</p>'
+            : negativas.map(v => renderReseña(v)).join(''));
 }
 
 // Render de una reseña individual con etiquetas de desempeño
+// MÓDULO 6.1/6.2: Render de una reseña con proyecto, estrellas y etiquetas
 function renderReseña(v) {
     const fecha = v.fecha
         ? new Date(v.fecha).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' })
         : '';
 
+    const estrellasFill = '★'.repeat(v.estrellas);
+    const estrellasVac  = '★'.repeat(5 - v.estrellas);
+
     // MÓDULO 6.2: etiquetas positivas en verde, negativas en rojo
-    const etiquetasHTML = (v.etiquetas || []).slice(0, 4).map(e => `
-        <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;
-            background:${e.tipo === 'positiva' ? '#D1FAE5' : '#FEE2E2'};
-            color:${e.tipo === 'positiva' ? '#065F46' : '#991B1B'};">${e.texto}</span>
-    `).join('');
+    const etiquetasHTML = (v.etiquetas || []).slice(0, 4).map(e =>
+        `<span class="${e.tipo === 'positiva' ? 'etiqueta-pos' : 'etiqueta-neg'}">${e.texto}</span>`
+    ).join('');
+
+    // Nombre del proyecto al que pertenece la valoración
+    const proyectoNombre = v.proyectoTitulo || '';
 
     return `
-        <div style="padding:16px 0;border-bottom:1px solid #F3F4F6;">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                <span style="font-size:15px;">${'⭐'.repeat(v.estrellas)}${'☆'.repeat(5-v.estrellas)}</span>
-                <span style="font-size:11px;color:#9CA3AF;">${fecha}</span>
+        <div class="reseña-item">
+            <div class="reseña-top">
+                <span class="reseña-stars-fill">${estrellasFill}</span>
+                <span class="reseña-stars-empty">${estrellasVac}</span>
+                <span class="reseña-fecha">${fecha}</span>
             </div>
-            ${etiquetasHTML ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">${etiquetasHTML}</div>` : ''}
-            ${v.comentario ? `<p style="font-size:13px;color:#4B5563;margin:0;font-style:italic;">"${v.comentario}"</p>` : ''}
+            ${proyectoNombre ? `
+                <div style="font-size:12px;color:#4F46E5;font-weight:600;margin-bottom:6px;">
+                    ${proyectoNombre}
+                </div>` : ''}
+            ${etiquetasHTML ? `<div class="reseña-etiquetas">${etiquetasHTML}</div>` : ''}
+            ${v.comentario ? `<p class="reseña-comentario">"${v.comentario}"</p>` : ''}
         </div>`;
 }
 
@@ -533,71 +562,101 @@ function renderReseña(v) {
 window.switchTab = (tab) => {
     document.getElementById('listaPositivas').style.display = tab === 'positivas' ? 'block' : 'none';
     document.getElementById('listaNegativas').style.display = tab === 'negativas' ? 'block' : 'none';
-    document.getElementById('btnTabPos').style.cssText =
-        tab === 'positivas'
-            ? 'padding:9px 18px;border-radius:8px;border:none;cursor:pointer;font-weight:600;font-size:13px;background:#D1FAE5;color:#065F46;'
-            : 'padding:9px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;border:1.5px solid #E5E7EB;background:white;color:#6B7280;';
-    document.getElementById('btnTabNeg').style.cssText =
-        tab === 'negativas'
-            ? 'padding:9px 18px;border-radius:8px;border:none;cursor:pointer;font-weight:600;font-size:13px;background:#FEE2E2;color:#991B1B;'
-            : 'padding:9px 18px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;border:1.5px solid #E5E7EB;background:white;color:#6B7280;';
+
+    const btnPos = document.getElementById('btnTabPos');
+    const btnNeg = document.getElementById('btnTabNeg');
+
+    btnPos.classList.toggle('active-pos', tab === 'positivas');
+    btnNeg.classList.toggle('active-neg', tab === 'negativas');
 };
 
 // ═══════════════════════════════════════════════════
 // MÓDULO 6.3 — Contador de recuperación X/7
 // MÓDULO 6.4 — Sanciones automáticas
 // ═══════════════════════════════════════════════════
+// MÓDULO 6.3 y 6.4: Sanciones automáticas y Contador de Recuperación X/7
+// La sanción se activa cuando las últimas 3 valoraciones tienen promedio < 2
+// El contador X/7 mide proyectos completados con buenas valoraciones DESDE la sanción
+// El usuario se recupera al completar 7 proyectos con valoración >= 4 post-sanción
 async function verificarSanciones(uid, userData) {
 
-    // MÓDULO 6.4: Si ya está sancionado → mostrar contador y verificar si ya pasaron 7 días
+    // MÓDULO 6.4: Si ya está sancionado → calcular progreso de recuperación
     if (userData.sancionado) {
-        const inicio = userData.fechaInicioSancion
-            ? new Date(userData.fechaInicioSancion) : new Date();
-        const dias = Math.floor((new Date() - inicio) / 86400000);
+        const fechaSancion = userData.fechaInicioSancion || new Date().toISOString();
 
-        if (dias >= 7) {
-            // Recuperación completa — quitar sanción
+        // Contar proyectos completados con buena valoración DESPUÉS de la sanción
+        const valsSnap = await getDocs(query(
+            collection(db, 'valoraciones'),
+            where('valuadoId', '==', uid)
+        ));
+
+        const proyectosRecuperacion = valsSnap.docs
+            .map(d => d.data())
+            .filter(v =>
+                v.estrellas >= 4 &&
+                v.fecha && v.fecha > fechaSancion // solo valoraciones post-sanción
+            ).length;
+
+        if (proyectosRecuperacion >= 7) {
+            // MÓDULO 6.3: Recuperación completa — 7 proyectos buenos completados
             await updateDoc(doc(db, 'usuarios', uid), {
-                sancionado: false, diasRecuperacion: 0, fechaInicioSancion: null
+                sancionado:             false,
+                proyectosRecuperacion:  0,
+                fechaInicioSancion:     null
             });
-        } else {
-            // Actualizar días y mostrar el banner de sanción
-            await updateDoc(doc(db, 'usuarios', uid), { diasRecuperacion: dias });
-
-            // MÓDULO 6.3: mostrar barra de recuperación X/7
-            document.getElementById('bannerSancion').style.display = 'block';
-            document.getElementById('diasRecuperacion').innerText  = dias;
-            document.getElementById('barraRecuperacion').style.width = `${(dias/7)*100}%`;
-            document.getElementById('diasRestantes').innerText =
-                `Se levantará automáticamente en ${7 - dias} día${7-dias !== 1 ? 's' : ''}.`;
+            return; // Banner ya no se muestra
         }
+
+        // Actualizar contador en Firestore
+        await updateDoc(doc(db, 'usuarios', uid), {
+            proyectosRecuperacion
+        });
+
+        // MÓDULO 6.3: Mostrar banner con contador X/7 de proyectos
+        const bannerEl = document.getElementById('bannerSancion');
+        const contEl   = document.getElementById('diasRecuperacion');
+        const barraEl  = document.getElementById('barraRecuperacion');
+        const notaEl   = document.getElementById('diasRestantes');
+
+        if (bannerEl) bannerEl.style.display = 'block';
+        if (contEl)   contEl.innerText = proyectosRecuperacion;
+        if (barraEl)  barraEl.style.width = `${(proyectosRecuperacion / 7) * 100}%`;
+        if (notaEl)   notaEl.innerText =
+            `Completa ${7 - proyectosRecuperacion} proyecto${7 - proyectosRecuperacion !== 1 ? 's' : ''} más con buenas valoraciones para levantar la sanción.`;
+
         return;
     }
 
     // MÓDULO 6.4: Verificar si debe sancionarse — revisar últimas 3 valoraciones
     const snap = await getDocs(query(
         collection(db, 'valoraciones'),
-        where('valuadoId', '==', uid),
-        orderBy('fecha', 'desc'),
-        limit(3)
+        where('valuadoId', '==', uid)
     ));
 
-    if (snap.size < 3) return; // Necesita al menos 3 para evaluar
+    if (snap.size < 3) return;
 
-    const ultimas3 = snap.docs.map(d => d.data());
+    const ultimas3 = snap.docs.map(d => d.data())
+        .sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0))
+        .slice(0, 3);
     const prom = ultimas3.reduce((s, v) => s + v.estrellas, 0) / 3;
 
     if (prom < 2) {
-        // Aplicar sanción automática
+        // MÓDULO 6.4: Aplicar sanción automática — inhabilitar postulaciones
         await updateDoc(doc(db, 'usuarios', uid), {
-            sancionado: true, diasRecuperacion: 0,
-            fechaInicioSancion: new Date().toISOString()
+            sancionado:            true,
+            proyectosRecuperacion: 0,
+            fechaInicioSancion:    new Date().toISOString()
         });
-        // Mostrar banner inmediatamente
-        document.getElementById('bannerSancion').style.display = 'block';
-        document.getElementById('diasRecuperacion').innerText  = '0';
-        document.getElementById('barraRecuperacion').style.width = '0%';
-        document.getElementById('diasRestantes').innerText = 'Se levantará automáticamente en 7 días.';
+
+        const bannerEl = document.getElementById('bannerSancion');
+        const contEl   = document.getElementById('diasRecuperacion');
+        const barraEl  = document.getElementById('barraRecuperacion');
+        const notaEl   = document.getElementById('diasRestantes');
+
+        if (bannerEl) bannerEl.style.display = 'block';
+        if (contEl)   contEl.innerText = '0';
+        if (barraEl)  barraEl.style.width = '0%';
+        if (notaEl)   notaEl.innerText = 'Completa 7 proyectos con buenas valoraciones para levantar la sanción.';
     }
 }
 
@@ -625,34 +684,117 @@ async function verificarAlertasEntrega(uid, rol) {
         if (!planSnap.exists()) continue;
 
         const hitos = planSnap.data().hitos || [];
-        hitos.forEach(hito => {
+        // Usar for...of en lugar de forEach para poder usar await dentro
+        for (const hito of hitos) {
             const fechaHito = new Date(hito.fecha);
             const diffDias  = Math.ceil((fechaHito - ahora) / 86400000);
-            if (diffDias < 0 || diffDias > 10) return;
+            if (diffDias < 0 || diffDias > 10) continue;
+
+            // MÓDULO 6.5: Crear notificación interna en campana
+            // Usar solo 2 where para evitar índice compuesto, filtrar en cliente
+            const notifCheck = await getDocs(query(
+                collection(db, 'notificaciones'),
+                where('para', '==', uid),
+                where('tipo', '==', 'alerta_hito')
+            ));
+            const hitoRef = `${postuDoc.id}_${hito.fecha}`;
+            const yaExiste = notifCheck.docs.some(d => d.data().hitoRef === hitoRef);
+
+            if (!yaExiste) {
+                const textoAviso = diffDias === 0
+                    ? `Hoy vence el hito "${hito.nombre}" del proyecto "${postu.proyectoTitulo || 'Proyecto'}".`
+                    : `En ${diffDias} día${diffDias !== 1 ? 's' : ''} vence "${hito.nombre}" — ${postu.proyectoTitulo || 'Proyecto'}.`;
+                await addDoc(collection(db, 'notificaciones'), {
+                    para:    uid,
+                    mensaje: textoAviso,
+                    fecha:   new Date().toISOString(),
+                    leido:   false,
+                    tipo:    'alerta_hito',
+                    hitoRef
+                });
+            }
 
             const urgente = diffDias <= 3;
-            const item    = document.createElement('div');
-            item.style.cssText = `
-                background:${urgente ? '#FEF2F2' : '#FFFBEB'};
-                border:1px solid ${urgente ? '#FCA5A5' : '#FDE68A'};
-                border-radius:12px;padding:14px 16px;
-                box-shadow:0 4px 12px rgba(0,0,0,0.1);`;
+            const item = document.createElement('div');
+            item.className = `alerta-item${urgente ? ' urgente' : ''}`;
+            const textoTiempo = diffDias === 0 ? 'Vence hoy'
+                              : diffDias === 1 ? 'Vence mañana'
+                              : `${diffDias} días restantes`;
             item.innerHTML = `
-                <div style="display:flex;justify-content:space-between;align-items:start;gap:8px;">
-                    <div>
-                        <strong style="font-size:13px;color:${urgente ? '#DC2626' : '#D97706'};">
-                            ${diffDias === 0 ? '🚨 ¡Vence hoy!' : diffDias === 1 ? '⚠️ Vence mañana' : `⏰ ${diffDias} días restantes`}
-                        </strong>
-                        <p style="font-size:12px;color:#374151;margin:4px 0 2px;">${hito.nombre}</p>
-                        <p style="font-size:11px;color:#6B7280;margin:0;">
-                            ${postu.proyectoTitulo || 'Proyecto'} ·
-                            ${fechaHito.toLocaleDateString('es-MX',{day:'2-digit',month:'short'})}
-                        </p>
-                    </div>
-                    <button onclick="this.parentElement.parentElement.remove()"
-                        style="background:none;border:none;cursor:pointer;color:#9CA3AF;font-size:16px;">✕</button>
-                </div>`;
+                <button class="alerta-cerrar" onclick="this.parentElement.remove()">✕</button>
+                <span class="alerta-titulo">${textoTiempo}</span>
+                <p class="alerta-hito">${hito.nombre}</p>
+                <p class="alerta-proyecto">
+                    ${postu.proyectoTitulo || 'Proyecto'} ·
+                    ${fechaHito.toLocaleDateString('es-MX',{day:'2-digit',month:'short'})}
+                </p>`;
             contenedor.appendChild(item);
-        });
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROYECTOS DE JOBIFY EN PORTAFOLIO DEL PROGRAMADOR
+// Muestra automáticamente los proyectos completados en Jobify
+// ═══════════════════════════════════════════════════════════
+async function cargarProyectosJobifyEnPortafolio(uid) {
+    const grid  = document.getElementById('portafolioItems');
+    const empty = document.getElementById('portafolioEmpty');
+    if (!grid) return;
+
+    const snap = await getDocs(query(
+        collection(db, 'postulaciones'),
+        where('programadorId', '==', uid),
+        where('estadoProyecto', '==', 'completado')
+    ));
+
+    if (snap.empty) return;
+
+    if (empty) empty.style.display = 'none';
+
+    const separador = document.createElement('div');
+    separador.style.cssText = 'grid-column:1/-1;padding:16px 0 4px;';
+    separador.innerHTML = `
+        <p style="font-size:12px;font-weight:700;color:#9CA3AF;
+                  text-transform:uppercase;letter-spacing:0.5px;margin:0;">
+            Proyectos completados en Jobify
+        </p>`;
+    grid.appendChild(separador);
+
+    for (const d of snap.docs) {
+        const pos = d.data();
+        const proySnap = await getDoc(doc(db, 'proyectos', pos.proyectoId));
+        if (!proySnap.exists()) continue;
+        const proy = proySnap.data();
+
+        const tagsHTML = (proy.tags || []).slice(0, 4)
+            .map(t => `<span style="padding:3px 8px;background:#EEF2FF;color:#4F46E5;
+                border-radius:20px;font-size:11px;font-weight:600;">${t}</span>`).join('');
+
+        const card = document.createElement('div');
+        card.className = 'portafolio-item';
+        card.innerHTML = `
+            <div style="padding:6px 16px;background:linear-gradient(135deg,#EEF2FF,#E0E7FF);
+                        border-bottom:1px solid #C7D2FE;">
+                <span style="font-size:10px;font-weight:700;color:#4F46E5;
+                             text-transform:uppercase;letter-spacing:0.5px;">Jobify</span>
+            </div>
+            <div class="portafolio-card-body">
+                <div style="font-weight:700;font-size:15px;color:#111827;">
+                    ${proy.titulo || pos.proyectoTitulo}
+                </div>
+                <div style="font-size:13px;color:#6B7280;line-height:1.5;">
+                    ${proy.descripcion
+                        ? proy.descripcion.slice(0, 100) + (proy.descripcion.length > 100 ? '...' : '')
+                        : 'Proyecto completado en Jobify'}
+                </div>
+                ${tagsHTML ? `<div style="display:flex;flex-wrap:wrap;gap:4px;">${tagsHTML}</div>` : ''}
+                <div style="display:flex;gap:12px;font-size:12px;color:#9CA3AF;">
+                    <span>$${proy.presupuesto || '-'} USD</span>
+                    <span>${proy.duracionSemanas || '-'} semanas</span>
+                </div>
+            </div>`;
+
+        grid.appendChild(card);
     }
 }

@@ -317,6 +317,12 @@ async function handlePostulacion() {
             return alert("Solo los programadores pueden postularse a proyectos.");
         }
 
+        // MÓDULO 6.4: Bloquear postulación si el usuario está sancionado
+        if (userData.sancionado) {
+            const pendientes = 7 - (userData.proyectosRecuperacion || 0);
+            return alert(`Tu cuenta tiene restricciones temporales por valoraciones negativas consecutivas. Debes completar ${pendientes} proyecto${pendientes !== 1 ? 's' : ''} más con buenas valoraciones para postularte de nuevo.`);
+        }
+
         const proyectoSnap = await getDoc(doc(db, "proyectos", proyectoId));
         const proyectoData = proyectoSnap.data();
 
