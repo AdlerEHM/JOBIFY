@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobify - Publicar Proyecto</title>
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="publicar.css">
+    <link rel="stylesheet" href="navbar.css">
+</head>
+<body>
+
+    <header class="top-bar">
+        <button class="btn-back" onclick="window.location.href='dashboard.html'">← Volver</button>
+        <h2 class="logo-text">JOBIFY</h2>
+        <div class="user-actions">
+            <span id="roleBadge" class="role-badge">...</span>
+            <div class="notif-wrapper">
+                <button class="notif-bell" id="notifBell">🔔
+                    <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+                </button>
+                <div class="notif-dropdown" id="notifDropdown">
+                    <div class="notif-header">
+                        <h4>Notificaciones</h4>
+                        <button class="btn-marcar-todas" id="btnMarcarTodas">✓ Marcar todas</button>
+                    </div>
+                    <div class="notif-lista" id="notifLista"></div>
+                </div>
+            </div>
+            <div class="profile-container-nav">
+                <div class="profile-trigger" id="profileTrigger">
+                    <img id="userPhoto" src="" alt="" style="display:none;">
+                    <div id="userInitial">?</div>
+                </div>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <div class="dropdown-header">
+                        <div class="large-profile-circle" id="menuInitial">?</div>
+                        <h4 id="menuName">Usuario</h4>
+                        <p id="menuEmail">correo@ejemplo.com</p>
+                        <div class="menu-reputacion" id="menuReputacion"></div>
+                    </div>
+                    <div class="dropdown-body">
+                        <button onclick="window.location.href='perfil.html'" class="btn-menu">⚙️ Editar Perfil</button>
+                        <button onclick="window.location.href='misproyectos.html'" class="btn-menu" style="margin-top:6px;">📁 Mis Proyectos</button>
+                    </div>
+                    <div class="dropdown-footer">
+                        <button id="btnLogout" class="btn-logout-dropdown">🚪 Cerrar Sesión</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="publish-main">
+        <div class="publish-container">
+
+            <div class="publish-header">
+                <h1>Publicar Proyecto</h1>
+                <p>Completa los detalles de tu proyecto para encontrar al programador ideal.</p>
+            </div>
+
+            <!-- SECCIÓN 1: INFORMACIÓN BÁSICA -->
+            <div class="form-section">
+                <h2 class="section-title">📋 Información Básica</h2>
+
+                <div class="form-group">
+                    <label for="projTitle">Título del proyecto <span class="required">*</span></label>
+                    <input type="text" id="projTitle" placeholder="Ej: Desarrollo de App Móvil para Delivery"
+                        maxlength="100">
+                    <span class="field-hint">Sé específico y descriptivo</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="projDesc">Descripción detallada <span class="required">*</span></label>
+                    <textarea id="projDesc" rows="8"
+                        placeholder="Describe el proyecto: qué necesitas, funcionalidades esperadas, contexto del negocio, entregables, etc."
+                        maxlength="10000"></textarea>
+                    <div class="word-counter">
+                        <span id="wordCount">0</span> / 1500 palabras
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="projCategoria">Categoría <span class="required">*</span></label>
+                        <select id="projCategoria">
+                            <option value="">Selecciona una categoría</option>
+                            <option value="Web">Desarrollo Web</option>
+                            <option value="Móvil">App Móvil</option>
+                            <option value="Backend">Backend / API</option>
+                            <option value="Frontend">Frontend / UI</option>
+                            <option value="Base de Datos">Base de Datos</option>
+                            <option value="DevOps">DevOps / Cloud</option>
+                            <option value="IA / ML">IA / Machine Learning</option>
+                            <option value="Ciberseguridad">Ciberseguridad</option>
+                            <option value="E-commerce">E-commerce</option>
+                            <option value="Juegos">Videojuegos</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tipo de proyecto <span class="required">*</span></label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" class="tipo-check" value="Nuevo desarrollo"> Nuevo desarrollo
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" class="tipo-check" value="Mantenimiento"> Mantenimiento
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" class="tipo-check" value="Mejoras"> Mejoras
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" class="tipo-check" value="Consultoría"> Consultoría
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" class="tipo-check" value="Diseño UI/UX"> Diseño UI/UX
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: TECNOLOGÍAS -->
+            <div class="form-section">
+                <h2 class="section-title">⚙️ Tecnologías Requeridas</h2>
+                <p class="section-subtitle">Selecciona las tecnologías que necesitas. Puedes elegir varias.</p>
+
+                <div class="tags-grid">
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="JavaScript"> JavaScript</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="TypeScript"> TypeScript</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="Python"> Python</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="Java"> Java</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="PHP"> PHP</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="C#"> C#</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="C++"> C++</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="Swift"> Swift</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="Kotlin"> Kotlin</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="Dart"> Dart</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="Go"> Go</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="Ruby"> Ruby</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="HTML"> HTML</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="CSS"> CSS</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="SQL"> SQL</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="Scala"> Scala</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="R"> R</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="MATLAB"> MATLAB</label>
+                    <label class="tag-check-item"><input type="checkbox" class="tag-check" value="Julia"> Julia</label>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 3: NIVEL Y DURACIÓN -->
+            <div class="form-section">
+                <h2 class="section-title">🎯 Nivel y Duración</h2>
+
+                <div class="form-group">
+                    <label>Nivel de experiencia requerido <span class="required">*</span></label>
+                    <div class="nivel-options">
+                        <label class="nivel-card">
+                            <input type="radio" name="nivel" value="Junior">
+                            <div class="nivel-card-content">
+                                <span class="nivel-icon">🌱</span>
+                                <span class="nivel-name">Junior</span>
+                                <span class="nivel-desc">1-2 años de experiencia</span>
+                            </div>
+                        </label>
+                        <label class="nivel-card">
+                            <input type="radio" name="nivel" value="Semisenior">
+                            <div class="nivel-card-content">
+                                <span class="nivel-icon">⚡</span>
+                                <span class="nivel-name">Semisenior</span>
+                                <span class="nivel-desc">2-4 años de experiencia</span>
+                            </div>
+                        </label>
+                        <label class="nivel-card">
+                            <input type="radio" name="nivel" value="Senior">
+                            <div class="nivel-card-content">
+                                <span class="nivel-icon">🚀</span>
+                                <span class="nivel-name">Senior</span>
+                                <span class="nivel-desc">4+ años de experiencia</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="projDuration">Duración estimada <span class="required">*</span></label>
+                        <div class="duration-input">
+                            <input type="number" id="projDuration" min="1" max="12"
+                                placeholder="Ej: 4">
+                            <span class="duration-label">semanas (máx. 12)</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="projEntrega">Modalidad de revisión <span class="required">*</span></label>
+                        <select id="projEntrega">
+                            <option value="">Selecciona...</option>
+                            <option value="quincenal">Quincenal (cada 2 semanas)</option>
+                            <option value="mensual">Mensual (una vez al mes)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 4: PRESUPUESTO Y PAGO -->
+            <div class="form-section">
+                <h2 class="section-title">💰 Presupuesto y Pago</h2>
+
+                <div class="form-group">
+                    <label>Rango de presupuesto <span class="required">*</span></label>
+                    <div class="presupuesto-options">
+                        <label class="presupuesto-item">
+                            <input type="radio" name="presupuestoRango" value="500"> $100 – $500 USD
+                        </label>
+                        <label class="presupuesto-item">
+                            <input type="radio" name="presupuestoRango" value="1000"> $500 – $1,000 USD
+                        </label>
+                        <label class="presupuesto-item">
+                            <input type="radio" name="presupuestoRango" value="2500"> $1,000 – $2,500 USD
+                        </label>
+                        <label class="presupuesto-item">
+                            <input type="radio" name="presupuestoRango" value="5000"> $2,500 – $5,000 USD
+                        </label>
+                        <label class="presupuesto-item">
+                            <input type="radio" name="presupuestoRango" value="personalizado"> Personalizado
+                        </label>
+                    </div>
+
+                    <div id="presupuestoPersonalizado" style="display:none; margin-top:12px;">
+                        <input type="number" id="projBudgetCustom" placeholder="Ingresa el monto en USD"
+                            min="1" style="max-width:260px;">
+                        <span class="field-hint">USD</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="projPago">Modalidad de pago <span class="required">*</span></label>
+                    <select id="projPago">
+                        <option value="">Selecciona...</option>
+                        <option value="por-entrega">Por cada entrega / hito</option>
+                        <option value="periodico">Por fecha (15 o 30 días)</option>
+                        <option value="unico">Pago único al finalizar</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- ERROR Y BOTÓN -->
+            <div id="formError" class="form-error" style="display:none;"></div>
+
+            <div class="form-actions">
+                <button type="button" class="btn-cancel"
+                    onclick="window.location.href='dashboard.html'">Cancelar</button>
+                <button type="button" id="btnPublish" class="btn-publish">
+                    🚀 Publicar Proyecto
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <script type="module" src="publicar.js"></script>
+    <script type="module">
+        import { iniciarNavbar } from "./navbar.js";
+        iniciarNavbar();
+    </script>
+</body>
+</html>

@@ -1,0 +1,324 @@
+/* ─── LAYOUT VALORAR TAB ─── */
+.valorar-layout {
+    padding: 32px;
+    max-width: 620px;
+    margin: 0 auto;
+    overflow-y: auto;
+    height: calc(100vh - 64px - 49px);
+}
+
+/* ─── ESTADO COMPLETADO ─── */
+.proyecto-completado-banner {
+    background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+    border: 1px solid #6EE7B7;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.proyecto-completado-banner h3 { font-size: 18px; font-weight: 800; color: #065F46; margin-bottom: 4px; }
+.proyecto-completado-banner p  { font-size: 13px; color: #047857; }
+
+/* ─── YA VALORADO ─── */
+.ya-valorado {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+}
+.ya-valorado span { font-size: 48px; display: block; margin-bottom: 12px; }
+.ya-valorado h3 { font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+.ya-valorado p { font-size: 14px; line-height: 1.6; }
+
+/* ─── FORMULARIO DE VALORACIÓN ─── */
+.valoracion-form {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.valoracion-form h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 6px;
+}
+
+.valoracion-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+/* ─── ESTRELLAS ─── */
+.stars-section { margin-bottom: 24px; }
+.stars-label { font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; display: block; }
+
+.stars-container {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.star-btn {
+    font-size: 36px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    line-height: 1;
+    transition: transform 0.15s;
+    filter: grayscale(1) opacity(0.4);
+}
+.star-btn:hover,
+.star-btn.active { filter: grayscale(0) opacity(1); transform: scale(1.15); }
+
+.stars-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    height: 16px;
+    transition: all 0.2s;
+}
+
+/* ─── ETIQUETAS ─── */
+.etiquetas-section { margin-bottom: 24px; }
+.etiquetas-label { font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; display: block; }
+
+.etiquetas-grupo { margin-bottom: 14px; }
+.etiquetas-grupo-titulo {
+    font-size: 11px;
+    font-weight: 700;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.etiquetas-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.etiqueta-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: #F8F9FA;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.etiqueta-chip:hover { border-color: var(--primary); color: var(--primary); }
+.etiqueta-chip.positiva.selected { background: #D1FAE5; border-color: #10B981; color: #065F46; }
+.etiqueta-chip.negativa.selected { background: #FEE2E2; border-color: #EF4444; color: #991B1B; }
+
+/* ─── COMENTARIO ─── */
+.comentario-section { margin-bottom: 24px; }
+.comentario-label { font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; display: block; }
+
+.comentario-section textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    resize: none;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+}
+.comentario-section textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* ─── BOTÓN ENVIAR ─── */
+.btn-enviar-valoracion {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-enviar-valoracion:hover {
+    background: #4338CA;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(79,70,229,0.35);
+}
+.btn-enviar-valoracion:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ─── VALORACIÓN RECIBIDA ─── */
+.valoracion-recibida {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin-top: 20px;
+}
+.valoracion-recibida h4 { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text-main); }
+
+.val-estrellas { font-size: 24px; margin-bottom: 10px; }
+
+.val-etiquetas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+.val-etiqueta {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.val-etiqueta.positiva { background: #D1FAE5; color: #065F46; }
+.val-etiqueta.negativa { background: #FEE2E2; color: #991B1B; }
+
+.val-comentario {
+    font-size: 13px;
+    color: #555;
+    font-style: italic;
+    line-height: 1.6;
+    background: #F8F9FA;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border-left: 3px solid var(--primary);
+}
+
+/* ─── BOTÓN COMPLETAR PROYECTO ─── */
+.btn-completar-proyecto {
+    width: 100%;
+    padding: 12px;
+    background: #10B981;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-completar-proyecto:hover { background: #059669; transform: translateY(-1px); }
+
+/* ─── WORKSPACE CSS EXTRAS ─── */
+.valorar-layout .empty-msg {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    padding: 40px 0;
+}
+
+/* ─── PANEL COMPLETAR PROYECTO ─── */
+.completar-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+.completar-box div { flex: 1; }
+.completar-box strong { font-size: 14px; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 3px; }
+.completar-box p { font-size: 12px; color: var(--text-muted); margin: 0; line-height: 1.5; }
+
+.completar-box.inicial    { background: #F8F9FA; }
+.completar-box.esperando  { background: #FEF3C7; border-color: #FDE68A; }
+.completar-box.pendiente-yo { background: #EFF6FF; border-color: #BFDBFE; }
+.completar-box.completado { background: #F0FDF4; border-color: #BBF7D0; }
+
+.btn-confirmar-completo {
+    padding: 9px 16px;
+    background: #2563EB;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+.btn-confirmar-completo:hover { background: #1D4ED8; }
+
+.btn-completar-proyecto {
+    padding: 9px 16px;
+    background: #10B981;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+.btn-completar-proyecto:hover { background: #059669; }
+/* ─── RECIBO DE PAGO ─── */
+.recibo-pago-box {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #BBF7D0;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(16,185,129,0.08);
+}
+.recibo-header {
+    background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+    padding: 24px;
+    text-align: center;
+}
+.recibo-check {
+    width: 52px; height: 52px;
+    background: #10B981; color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 700;
+    margin: 0 auto 12px;
+}
+.recibo-header h3 { font-size: 18px; font-weight: 700; color: #065F46; margin: 0 0 4px; }
+.recibo-header p  { font-size: 13px; color: #047857; margin: 0; }
+.recibo-detalles  { padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; }
+.recibo-fila {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid #F0FDF4; font-size: 13px;
+}
+.recibo-fila:last-child { border-bottom: none; }
+.recibo-fila span     { color: #6B7280; }
+.recibo-fila strong   { color: #111827; text-align: right; max-width: 60%; word-break: break-all; }
+
+/* ─── PAGO COMPLETADO BOX ─── */
+.pago-completado-box {
+    background: white; border-radius: 16px;
+    border: 1px solid #BBF7D0; padding: 32px; text-align: center;
+}
+.pago-check {
+    width: 52px; height: 52px;
+    background: #10B981; color: white; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700; margin: 0 auto 16px;
+}
+.pago-completado-box h3 { font-size: 18px; font-weight: 700; color: #065F46; margin: 0 0 8px; }
+.pago-completado-box p  { font-size: 13px; color: #047857; margin: 0 0 20px; }

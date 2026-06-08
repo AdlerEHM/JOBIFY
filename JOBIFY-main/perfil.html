@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobify - Mi Perfil</title>
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="perfil.css">
+</head>
+<body>
+
+    <!-- TOP BAR -->
+    <header class="perfil-topbar">
+        <span class="perfil-logo">JOBIFY</span>
+        <div id="errorMsg" class="error-msg" style="display:none;"></div>
+    </header>
+
+    <!-- LAYOUT DOS COLUMNAS -->
+    <div class="perfil-layout">
+
+        <!-- COLUMNA IZQUIERDA: datos del perfil -->
+        <aside class="perfil-sidebar">
+            <div class="sidebar-inner">
+                <h2 class="sidebar-titulo" id="perfilTitulo">Configura tu Perfil</h2>
+                <p class="sidebar-subtitle">Completa tu información para empezar a usar la plataforma.</p>
+
+                <!-- FOTO -->
+                <div class="foto-group">
+                    <div class="foto-preview-wrapper">
+                        <img id="fotoPreview" src="" alt="Foto" style="display:none;" class="foto-preview">
+                        <div id="fotoPlaceholder" class="foto-placeholder">📷</div>
+                    </div>
+                    <div class="foto-info">
+                        <label class="field-label">Foto de perfil</label>
+                        <input type="file" id="profileImage" accept="image/png, image/jpeg, image/webp">
+                        <small id="uploadStatus" class="upload-status"></small>
+                    </div>
+                </div>
+
+                <!-- NOMBRE -->
+                <div class="form-group">
+                    <label class="field-label">Nombre público <span class="required">*</span></label>
+                    <input type="text" id="displayName" placeholder="Tu nombre completo o empresa">
+                </div>
+
+                <!-- CAMPOS EMPRESA -->
+                <div id="companyFields" style="display:none;" class="exclusive-fields">
+                    <label class="field-label">Descripción de la empresa <span class="required">*</span></label>
+                    <textarea id="companyBio" placeholder="Cuéntanos sobre tu empresa..."></textarea>
+                    <div id="bioCounter" class="bio-counter">0 / 1000 palabras</div>
+                </div>
+
+                <!-- CAMPOS PROGRAMADOR -->
+                <div id="devFields" style="display:none;">
+                    <div class="exclusive-fields">
+                        <label class="field-label">Habilidades <span class="required">*</span></label>
+                        <p class="field-hint">Selecciona los lenguajes y tecnologías que dominas.</p>
+                        <div id="skillsCloud" class="skills-cloud"></div>
+                    </div>
+                    <div class="form-group" style="margin-top:16px;">
+                        <label class="field-label">Rango de pago sugerido (USD)</label>
+                        <input type="number" id="payRange" placeholder="Ej: 500" min="0">
+                        <small class="field-hint">¿Cuánto cobras aproximadamente por proyecto?</small>
+                    </div>
+                </div>
+
+                <button id="btnSaveProfile" class="btn-main">Guardar Perfil</button>
+            </div>
+        </aside>
+
+        <!-- COLUMNA DERECHA: portafolio (solo programadores) -->
+        <main class="perfil-main" id="portafolioSection" style="display:none;">
+            <div class="portafolio-header">
+                <div>
+                    <h2 class="portafolio-titulo">🗂️ Mi Portafolio</h2>
+                    <p class="portafolio-subtitle">Muestra tu trabajo a las empresas. Cada proyecto aumenta tus chances.</p>
+                </div>
+                <button id="btnAgregarProyecto" class="btn-agregar-portafolio">+ Agregar proyecto</button>
+            </div>
+
+            <div class="portafolio-grid" id="portafolioItems">
+                <div class="portafolio-empty" id="portafolioEmpty">
+                    <div class="empty-icon">🖼️</div>
+                    <h3>Sin proyectos aún</h3>
+                    <p>Agrega tus mejores proyectos para destacar ante las empresas.</p>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <script type="module" src="perfil.js"></script>
+</body>
+</html>
