@@ -436,6 +436,49 @@ function renderizarPlan(plan) {
             if (fechaHito < hoy) dotClass = 'vencido';
             else if ((fechaHito - hoy) < 7 * 86400000) dotClass = 'proximo';
 
+            // Botón de reportar: solo aparece si el hito ya venció,
+            // el usuario es Empresa, y el hito no ha sido reportado antes
+            const btnReportar = (dotClass === 'vencido' && rolActual === 'Empresa' && !hito.reportado)
+                ? `<button class="btn-reportar-hito" data-index="${i}" title="Reportar incumplimiento">🚩 Reportar</button>`
+                : (hito.reportado ? `<span class="hito-reportado-badge">🚩 Reportado</span>` : '');
+
+            // Botón de justificar: solo para el Programador, solo si el hito fue reportado,
+            // no fue justificado aún, y no han pasado más de 48h desde el reporte
+            let btnJustificar = '';
+            if (rolActual === 'Programador' && hito.reportado && !hito.justificacion) {
+                const msDesdeReporte = hito.fechaReporte
+                    ? Date.now() - new Date(hito.fechaReporte).getTime()
+                    : Infinity;
+                if (msDesdeReporte < 48 * 3600000) {
+                    btnJustificar = `<button class="btn-justificar-hito" data-index="${i}">✏️ Justificar</button>`;
+                }
+            }
+
+            // Una vez que existe una justificación, mostrar el estado según quién la ve
+            // y según si la empresa ya la aceptó o rechazó
+            if (hito.justificacion) {
+                const est = hito.justificacionEstado; // 'aceptada' | 'rechazada' | undefined
+                if (est === 'aceptada') {
+                    // Ambos ven badge verde de aceptada
+                    btnJustificar = `<span class="hito-just-badge aceptada">✅ Aceptada</span>`;
+                } else if (est === 'rechazada') {
+                    // Ambos ven badge rojo de rechazada
+                    btnJustificar = `<span class="hito-just-badge rechazada">❌ Rechazada</span>`;
+                } else if (rolActual === 'Empresa') {
+                    // Empresa puede ver y resolver la justificación pendiente
+                    btnJustificar = `<button class="btn-ver-justificacion" data-index="${i}">💬 Ver justificación</button>`;
+                } else {
+                    // Programador ve que está pendiente de revisión
+                    btnJustificar = `<span class="hito-just-badge pendiente">⏳ En revisión</span>`;
+                }
+            }
+
+            // Botón "Ver motivo": aparece para ambos cuando la justificación fue rechazada,
+            // abre un popup con el texto del motivo que dio la empresa
+            const btnVerMotivo = (hito.justificacionEstado === 'rechazada' && hito.motivoRechazo)
+                ? `<button class="btn-ver-motivo" data-index="${i}">💬 Ver motivo</button>`
+                : '';
+
             const item = document.createElement('div');
             item.className = 'hito-item';
             item.innerHTML = `
@@ -444,6 +487,9 @@ function renderizarPlan(plan) {
                     <div class="hito-nombre">${hito.nombre}</div>
                     <div class="hito-fecha">${fechaHito.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
                 </div>
+                ${btnReportar}
+                ${btnJustificar}
+                ${btnVerMotivo}
                 ${!planBloqueado ? `<button class="btn-eliminar-hito" data-index="${i}">🗑️</button>` : ''}`;
             lista.appendChild(item);
         });
@@ -455,6 +501,38 @@ function renderizarPlan(plan) {
                 const planActual = snap.exists() ? snap.data() : { hitos: [] };
                 planActual.hitos.splice(idx, 1);
                 await updateDoc(doc(db, "postulaciones", postulacionId, "plan", "datos"), { hitos: planActual.hitos });
+            };
+        });
+
+        // Asignar evento a cada botón de reportar incumplimiento
+        lista.querySelectorAll('.btn-reportar-hito').forEach(btn => {
+            btn.onclick = () => {
+                const idx = parseInt(btn.getAttribute('data-index'));
+                reportarIncumplimiento(idx, hitos[idx]);
+            };
+        });
+
+        // Asignar evento a cada botón de justificar retraso
+        lista.querySelectorAll('.btn-justificar-hito').forEach(btn => {
+            btn.onclick = () => {
+                const idx = parseInt(btn.getAttribute('data-index'));
+                abrirModalJustificacion(idx, hitos[idx]);
+            };
+        });
+
+        // Asignar evento al botón "Ver justificación" (solo Empresa, cuando está pendiente de revisión)
+        lista.querySelectorAll('.btn-ver-justificacion').forEach(btn => {
+            btn.onclick = () => {
+                const idx = parseInt(btn.getAttribute('data-index'));
+                abrirModalVerJustificacion(idx, hitos[idx]);
+            };
+        });
+
+        // Asignar evento al botón "Ver motivo" (ambos roles, cuando la justificación fue rechazada)
+        lista.querySelectorAll('.btn-ver-motivo').forEach(btn => {
+            btn.onclick = () => {
+                const idx = parseInt(btn.getAttribute('data-index'));
+                abrirModalMotivoRechazo(hitos[idx]);
             };
         });
     }
@@ -500,6 +578,193 @@ async function agregarHito() {
     await setDoc(planRef, { ...planActual, estado: planActual.estado || 'borrador' });
     document.getElementById('hitoNombre').value = '';
     document.getElementById('hitoFecha').value  = '';
+}
+
+// ─── REPORTAR INCUMPLIMIENTO ──────────────────────────────────────────────
+// Llamada cuando la Empresa presiona "Reportar" en un hito vencido.
+// Marca el hito como reportado en Firestore para que no se pueda reportar dos veces,
+// y suma 1 falta al programador en su documento de usuario.
+// Si el programador llega a 3 faltas, su cuenta queda suspendida (suspendido: true).
+async function reportarIncumplimiento(idx, hito) {
+    const confirmar = confirm(
+        `¿Reportar incumplimiento para el hito "${hito.nombre}"?\n\nEsto sumará una falta al programador. Al llegar a 3 faltas, su cuenta quedará suspendida.`
+    );
+    if (!confirmar) return;
+
+    // 1. Marcar el hito como reportado en el plan para que no se pueda reportar dos veces.
+    //    También guardamos fechaReporte para que el programador sepa cuánto tiempo tiene para justificarse (48h).
+    const planRef = doc(db, "postulaciones", postulacionId, "plan", "datos");
+    const planSnap = await getDoc(planRef);
+    if (!planSnap.exists()) return;
+    const planActual = planSnap.data();
+    planActual.hitos[idx].reportado    = true;
+    planActual.hitos[idx].fechaReporte = new Date().toISOString();
+    await updateDoc(planRef, { hitos: planActual.hitos });
+
+    // 2. Sumar 1 falta al programador en su documento de usuario
+    const devId = postulacionData.programadorId;
+    const userRef = doc(db, "usuarios", devId);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) return;
+    const userData = userSnap.data();
+    const faltasActuales = (userData.faltas || 0) + 1;
+    const suspendido = faltasActuales >= 3;
+
+    await updateDoc(userRef, {
+        faltas: faltasActuales,
+        suspendido: suspendido
+    });
+
+    // 3. Notificar al programador
+    await addDoc(collection(db, "notificaciones"), {
+        para:    devId,
+        mensaje: `La empresa reportó un incumplimiento en el hito "${hito.nombre}" del proyecto "${proyectoData?.titulo || 'Proyecto'}". Llevas ${faltasActuales} falta(s).${suspendido ? ' Tu cuenta ha sido suspendida temporalmente.' : ''}`,
+        fecha:   new Date().toISOString(),
+        leido:   false
+    });
+
+    alert(suspendido
+        ? `Incumplimiento registrado. El programador ha acumulado ${faltasActuales} faltas y su cuenta ha sido suspendida.`
+        : `Incumplimiento registrado. El programador lleva ${faltasActuales} falta(s).`
+    );
+}
+
+// ─── MODAL DE JUSTIFICACIÓN ───────────────────────────────────────────────
+// Abre el modal donde el Programador escribe su justificación por el retraso.
+// Solo se puede usar dentro de las 48h posteriores al reporte.
+// Guarda la justificación en el hito dentro de Firestore y notifica a la Empresa.
+function abrirModalJustificacion(idx, hito) {
+    document.getElementById('modalJustificacion').style.display = 'flex';
+    document.getElementById('txtJustificacion').value = '';
+    document.getElementById('nombreHitoJust').innerText = hito.nombre;
+
+    // Botón cancelar: cierra el modal sin guardar nada
+    document.getElementById('btnCancelarJust').onclick = () => {
+        document.getElementById('modalJustificacion').style.display = 'none';
+    };
+
+    // Botón enviar: valida que haya texto y guarda la justificación
+    document.getElementById('btnEnviarJust').onclick = async () => {
+        const texto = document.getElementById('txtJustificacion').value.trim();
+        if (!texto) return alert('Escribe tu justificación antes de enviar.');
+
+        // Guardar la justificación en el campo del hito en Firestore
+        const planRef = doc(db, "postulaciones", postulacionId, "plan", "datos");
+        const planSnap = await getDoc(planRef);
+        if (!planSnap.exists()) return;
+        const planActual = planSnap.data();
+        planActual.hitos[idx].justificacion = texto;
+        await updateDoc(planRef, { hitos: planActual.hitos });
+
+        // Notificar a la Empresa que el programador justificó el retraso
+        await addDoc(collection(db, "notificaciones"), {
+            para:    postulacionData.empresaId,
+            mensaje: `El programador justificó el retraso en el hito "${hito.nombre}" del proyecto "${proyectoData?.titulo || 'Proyecto'}": "${texto}"`,
+            fecha:   new Date().toISOString(),
+            leido:   false
+        });
+
+        document.getElementById('modalJustificacion').style.display = 'none';
+        alert('Justificación enviada. La empresa verá tu explicación en el hito.');
+    };
+}
+
+// ─── MODAL VER JUSTIFICACIÓN (EMPRESA) ───────────────────────────────────
+// Abre el popup donde la Empresa lee la justificación del programador.
+// Muestra dos botones: Aceptar (quita 1 falta) o Rechazar (pide motivo, mantiene la falta).
+function abrirModalVerJustificacion(idx, hito) {
+    // Mostrar el modal y rellenar el texto de la justificación
+    document.getElementById('modalVerJust').style.display = 'flex';
+    document.getElementById('textoJustificacionVer').innerText = hito.justificacion;
+    document.getElementById('nombreHitoVer').innerText = hito.nombre;
+
+    // Resetear la sección de motivo de rechazo (por si se abrió antes)
+    document.getElementById('seccionMotivoRechazo').style.display = 'none';
+    document.getElementById('txtMotivoRechazo').value = '';
+
+    // Botón cerrar: cierra sin hacer nada
+    document.getElementById('btnCerrarVerJust').onclick = () => {
+        document.getElementById('modalVerJust').style.display = 'none';
+    };
+
+    // Botón Aceptar: quita 1 falta al programador y marca la justificación como aceptada
+    document.getElementById('btnAceptarJust').onclick = async () => {
+        const planRef = doc(db, "postulaciones", postulacionId, "plan", "datos");
+        const planSnap = await getDoc(planRef);
+        if (!planSnap.exists()) return;
+        const planActual = planSnap.data();
+        planActual.hitos[idx].justificacionEstado = 'aceptada';
+        await updateDoc(planRef, { hitos: planActual.hitos });
+
+        // Restar 1 falta al programador (mínimo 0)
+        const devId = postulacionData.programadorId;
+        const userRef = doc(db, "usuarios", devId);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+            const faltasActuales = userSnap.data().faltas || 0;
+            const nuevasFaltas = Math.max(0, faltasActuales - 1);
+            await updateDoc(userRef, {
+                faltas: nuevasFaltas,
+                // Si las faltas bajan de 3, levantar la suspensión
+                suspendido: nuevasFaltas >= 3
+            });
+        }
+
+        // Notificar al programador que su justificación fue aceptada
+        await addDoc(collection(db, "notificaciones"), {
+            para:    postulacionData.programadorId,
+            mensaje: `La empresa aceptó tu justificación para el hito "${hito.nombre}" del proyecto "${proyectoData?.titulo || 'Proyecto'}". Se eliminó 1 falta de tu historial.`,
+            fecha:   new Date().toISOString(),
+            leido:   false
+        });
+
+        document.getElementById('modalVerJust').style.display = 'none';
+        alert('Justificación aceptada. Se eliminó 1 falta del historial del programador.');
+    };
+
+    // Botón Rechazar: muestra el campo de motivo antes de confirmar
+    document.getElementById('btnRechazarJust').onclick = () => {
+        document.getElementById('seccionMotivoRechazo').style.display = 'flex';
+    };
+
+    // Botón Confirmar rechazo: guarda el motivo y mantiene la falta
+    document.getElementById('btnConfirmarRechazo').onclick = async () => {
+        const motivo = document.getElementById('txtMotivoRechazo').value.trim();
+        if (!motivo) return alert('Escribe el motivo del rechazo antes de confirmar.');
+
+        const planRef = doc(db, "postulaciones", postulacionId, "plan", "datos");
+        const planSnap = await getDoc(planRef);
+        if (!planSnap.exists()) return;
+        const planActual = planSnap.data();
+        planActual.hitos[idx].justificacionEstado = 'rechazada';
+        planActual.hitos[idx].motivoRechazo = motivo;
+        await updateDoc(planRef, { hitos: planActual.hitos });
+
+        // Notificar al programador que su justificación fue rechazada con el motivo
+        await addDoc(collection(db, "notificaciones"), {
+            para:    postulacionData.programadorId,
+            mensaje: `La empresa rechazó tu justificación para el hito "${hito.nombre}" del proyecto "${proyectoData?.titulo || 'Proyecto'}". Motivo: "${motivo}". La falta se mantiene en tu historial.`,
+            fecha:   new Date().toISOString(),
+            leido:   false
+        });
+
+        document.getElementById('modalVerJust').style.display = 'none';
+        alert('Justificación rechazada. La falta permanece en el historial del programador.');
+    };
+}
+
+// ─── MODAL VER MOTIVO DE RECHAZO ──────────────────────────────────────────
+// Popup simple que muestra el motivo por el que la empresa rechazó la justificación.
+// Visible para ambos roles (Empresa y Programador) cuando el estado es 'rechazada'.
+function abrirModalMotivoRechazo(hito) {
+    document.getElementById('modalMotivoRechazo').style.display = 'flex';
+    document.getElementById('nombreHitoMotivo').innerText = hito.nombre;
+    document.getElementById('textoMotivoRechazo').innerText = hito.motivoRechazo;
+
+    // Botón cerrar: cierra el popup
+    document.getElementById('btnCerrarMotivo').onclick = () => {
+        document.getElementById('modalMotivoRechazo').style.display = 'none';
+    };
 }
 
 // ─── TAREAS ───

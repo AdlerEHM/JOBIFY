@@ -163,7 +163,19 @@ onAuthStateChanged(auth, async (user) => {
         return;
     }
 
-    // Programador: verificar estado de postulación
+    // Programador suspendido: bloquear acceso al formulario de postulación.
+    // Un programador queda suspendido al acumular 3 faltas reportadas por empresas.
+    // La suspensión se levanta automáticamente si una empresa acepta su justificación
+    // y sus faltas bajan por debajo de 3.
+    if (userData.suspendido === true) {
+        document.getElementById('applyForm').style.display = 'none';
+        document.getElementById('applyCard').querySelector('h3').innerText = 'Cuenta suspendida';
+        document.getElementById('applyCard').querySelector('.apply-subtitle').innerText =
+            'Tu cuenta está suspendida por acumular 3 o más incumplimientos. No puedes postularte a nuevos proyectos. Si crees que es un error, contacta a soporte.';
+        return;
+    }
+
+    // Programador activo: verificar si ya se postuló a este proyecto
     const q = query(
         collection(db, "postulaciones"),
         where("proyectoId", "==", proyectoId),

@@ -1020,3 +1020,260 @@
 }
 .pago-completado-box h3 { font-size: 18px; font-weight: 700; color: var(--text-main); margin: 0 0 8px; }
 .pago-completado-box p  { font-size: 13px; color: var(--text-muted); margin: 0 0 20px; line-height: 1.5; }
+
+/* ─── BOTÓN REPORTAR INCUMPLIMIENTO ─── */
+/* Aparece junto a un hito cuando su fecha ya venció y el usuario es Empresa.
+   Usa rojo suave para comunicar urgencia sin ser agresivo visualmente. */
+.btn-reportar-hito {
+    padding: 4px 10px;
+    background: #FEE2E2;
+    color: #DC2626;
+    border: 1px solid #FECACA;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.btn-reportar-hito:hover { background: #FECACA; transform: translateY(-1px); }
+
+/* ─── BADGE "YA REPORTADO" ─── */
+/* Reemplaza al botón cuando el incumplimiento ya fue registrado.
+   Es solo visual, no es clickeable. */
+.hito-reportado-badge {
+    padding: 4px 10px;
+    background: #F1F5F9;
+    color: #94A3B8;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* ─── MODAL DE JUSTIFICACIÓN DE RETRASO ─── */
+/* Overlay oscuro que cubre toda la pantalla al abrir el modal */
+.modal-just-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+/* Caja blanca del modal, estilo consistente con el resto de cards del proyecto */
+.modal-just-box {
+    background: white;
+    border-radius: 16px;
+    padding: 32px 28px;
+    width: 100%;
+    max-width: 460px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.modal-just-titulo  { font-size: 18px; font-weight: 800; color: var(--text-main); margin: 0; }
+.modal-just-subtitulo { font-size: 14px; color: var(--text-muted); margin: 0; }
+.modal-just-aviso   { font-size: 13px; color: #92400E; background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 8px; padding: 10px 14px; margin: 0; line-height: 1.5; }
+
+/* Textarea donde el programador escribe la justificación */
+.modal-just-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+.modal-just-textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+
+.modal-just-acciones { display: flex; gap: 10px; margin-top: 4px; }
+
+/* Botón cancelar: gris neutro */
+.btn-just-cancelar {
+    flex: 1; padding: 11px;
+    background: #F1F5F9; color: var(--text-muted);
+    border: none; border-radius: 10px;
+    font-weight: 600; font-size: 14px;
+    cursor: pointer; font-family: inherit;
+    transition: background 0.2s;
+}
+.btn-just-cancelar:hover { background: #E2E8F0; }
+
+/* Botón enviar: azul primario igual que el resto de acciones principales */
+.btn-just-enviar {
+    flex: 1; padding: 11px;
+    background: var(--primary); color: white;
+    border: none; border-radius: 10px;
+    font-weight: 700; font-size: 14px;
+    cursor: pointer; font-family: inherit;
+    transition: background 0.2s;
+}
+.btn-just-enviar:hover { background: #4338CA; }
+
+/* Botón "Justificar" que aparece junto al hito reportado (lado del Programador) */
+.btn-justificar-hito {
+    padding: 4px 10px;
+    background: #EEF2FF;
+    color: var(--primary);
+    border: 1px solid #C7D2FE;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.btn-justificar-hito:hover { background: #C7D2FE; transform: translateY(-1px); }
+
+/* Badge que reemplaza al botón cuando ya se justificó */
+.hito-justificacion-badge {
+    padding: 4px 10px;
+    background: #F0FDF4;
+    color: #15803D;
+    border: 1px solid #BBF7D0;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Texto de justificación que aparece debajo del nombre del hito */
+.hito-justificacion-texto {
+    font-size: 12px;
+    color: #15803D;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* ─── BADGES DE ESTADO DE JUSTIFICACIÓN ─── */
+/* Muestran si la justificación fue aceptada, rechazada o está en revisión */
+.hito-just-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border: 1px solid;
+}
+.hito-just-badge.aceptada  { background: #F0FDF4; color: #15803D; border-color: #BBF7D0; }
+.hito-just-badge.rechazada { background: #FEF2F2; color: #DC2626; border-color: #FECACA; }
+.hito-just-badge.pendiente { background: #FEF3C7; color: #D97706; border-color: #FDE68A; }
+
+/* Motivo de rechazo: aparece en rojo suave debajo del nombre del hito */
+.hito-motivo-rechazo {
+    font-size: 12px;
+    color: #DC2626;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* ─── BOTÓN "VER JUSTIFICACIÓN" (Empresa, hito pendiente) ─── */
+.btn-ver-justificacion {
+    padding: 4px 10px;
+    background: #EEF2FF;
+    color: var(--primary);
+    border: 1px solid #C7D2FE;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.btn-ver-justificacion:hover { background: #C7D2FE; transform: translateY(-1px); }
+
+/* ─── CAJA DE TEXTO DE LA JUSTIFICACIÓN (dentro del popup) ─── */
+/* Muestra el texto completo del programador con buen contraste */
+.modal-ver-just-texto {
+    background: #F8FAFC;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: var(--text-main);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ─── SECCIÓN DE MOTIVO DE RECHAZO (aparece al presionar Rechazar) ─── */
+.seccion-motivo-rechazo {
+    flex-direction: column;
+    gap: 10px;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    margin-top: 4px;
+}
+
+/* Botón Rechazar: rojo suave alineado con el sistema de colores de peligro */
+.btn-just-rechazar {
+    flex: 1; padding: 11px;
+    background: #FEF2F2; color: #DC2626;
+    border: 1.5px solid #FECACA; border-radius: 10px;
+    font-weight: 700; font-size: 14px;
+    cursor: pointer; font-family: inherit;
+    transition: background 0.2s;
+}
+.btn-just-rechazar:hover { background: #FEE2E2; }
+
+/* Botón Confirmar rechazo: rojo sólido para comunicar acción definitiva */
+.btn-just-rechazar-confirm {
+    padding: 10px;
+    background: #DC2626; color: white;
+    border: none; border-radius: 10px;
+    font-weight: 700; font-size: 14px;
+    cursor: pointer; font-family: inherit;
+    transition: background 0.2s;
+    width: 100%;
+}
+.btn-just-rechazar-confirm:hover { background: #B91C1C; }
+
+/* Botón Cerrar: gris neutro discreto al fondo del popup */
+.btn-just-cerrar {
+    padding: 8px;
+    background: none; color: var(--text-muted);
+    border: none; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+    transition: background 0.2s;
+    align-self: center;
+}
+.btn-just-cerrar:hover { background: #F1F5F9; }
+
+/* ─── BOTÓN "VER MOTIVO" (ambos roles, hito con justificación rechazada) ─── */
+/* Mismo estilo visual que btn-ver-justificacion para mantener consistencia */
+.btn-ver-motivo {
+    padding: 4px 10px;
+    background: #FEF2F2;
+    color: #DC2626;
+    border: 1px solid #FECACA;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.btn-ver-motivo:hover { background: #FEE2E2; transform: translateY(-1px); }
+

@@ -662,3 +662,63 @@ textarea {
     .btn-agregar { width: 100%; text-align: center; }
     .rep-hero { flex-direction: column; }
 }
+
+/* ── PANEL DE FALTAS E INCUMPLIMIENTOS ── */
+/* Visible solo para Programadores en la sección de Valoraciones del perfil */
+.faltas-panel {
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-top: 20px;
+}
+
+/* Encabezado del panel: ícono + título + subtítulo */
+.faltas-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.faltas-icono { font-size: 28px; flex-shrink: 0; }
+.faltas-titulo { font-size: 15px; font-weight: 700; color: #111827; display: block; }
+.faltas-subtitulo { font-size: 12px; color: #6B7280; margin: 0; }
+
+/* Contador grande: número actual / máximo */
+.faltas-contador {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.faltas-num  { font-size: 40px; font-weight: 800; color: #111827; line-height: 1; }
+.faltas-sep  { font-size: 24px; color: #D1D5DB; }
+.faltas-max  { font-size: 24px; font-weight: 700; color: #9CA3AF; }
+.faltas-label { font-size: 14px; color: #6B7280; font-weight: 600; margin-left: 6px; }
+
+/* Barra de progreso de faltas */
+.faltas-barra-track {
+    background: #F3F4F6;
+    border-radius: 6px;
+    height: 8px;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+/* El color de la barra lo pone el JS según la cantidad de faltas */
+.faltas-barra-fill {
+    height: 8px;
+    border-radius: 6px;
+    width: 0%;
+    transition: width 0.4s ease, background 0.3s;
+}
+
+/* Texto de estado debajo de la barra */
+.faltas-estado {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.5;
+}

@@ -108,6 +108,32 @@
         <!-- COLUMNA DERECHA CON TABS -->
         <main class="perfil-main" id="portafolioSection" style="display:none;">
 
+            <!-- PANEL DE INCUMPLIMIENTOS (solo Programador) -->
+            <!-- Aparece siempre arriba de todo cuando el usuario es Programador.
+                 El JS lo muestra solo si rolUsuario === 'Programador'. -->
+            <div id="panelFaltas" class="faltas-panel" style="display:none;">
+                <div class="faltas-header">
+                    <span class="faltas-icono">⚠️</span>
+                    <div class="faltas-header-info">
+                        <strong class="faltas-titulo">Historial de Incumplimientos</strong>
+                        <p class="faltas-subtitulo">Hitos reportados por empresas como no entregados a tiempo</p>
+                    </div>
+                    <div class="faltas-resumen">
+                        <span id="faltasNum" class="faltas-num">0</span>
+                        <span class="faltas-sep">/</span>
+                        <span id="faltasMax" class="faltas-max">3</span>
+                        <span class="faltas-label">faltas</span>
+                    </div>
+                </div>
+                <!-- Barra de progreso -->
+                <div class="faltas-barra-track">
+                    <div id="faltasBarra" class="faltas-barra-fill"></div>
+                </div>
+                <p id="faltasEstado" class="faltas-estado"></p>
+                <!-- Lista detallada de incumplimientos -->
+                <div id="listaIncumplimientos" class="incump-lista"></div>
+            </div>
+
             <div class="perfil-tabs-bar">
                 <button class="perfil-tab active" data-panel="panel-trabajo">Trabajo</button>
                 <button class="perfil-tab" data-panel="panel-valoraciones">Valoraciones</button>

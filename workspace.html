@@ -209,6 +209,75 @@
 
     </main>
 
+    <!-- MODAL VER MOTIVO DE RECHAZO -->
+    <!-- Popup simple que muestra el motivo por el que la empresa rechazó la justificación -->
+    <div id="modalMotivoRechazo" class="modal-just-overlay" style="display:none;">
+        <div class="modal-just-box" style="max-width: 400px;">
+            <h3 class="modal-just-titulo">❌ Motivo del Rechazo</h3>
+            <p class="modal-just-subtitulo">Hito: <strong id="nombreHitoMotivo"></strong></p>
+            <div class="modal-ver-just-texto" id="textoMotivoRechazo"></div>
+            <button id="btnCerrarMotivo" class="btn-just-cerrar" style="margin-top:8px;">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- MODAL VER JUSTIFICACIÓN (EMPRESA) -->
+    <!-- Popup donde la Empresa lee la justificación del programador y decide aceptar o rechazar -->
+    <div id="modalVerJust" class="modal-just-overlay" style="display:none;">
+        <div class="modal-just-box">
+            <h3 class="modal-just-titulo">💬 Justificación del Programador</h3>
+            <p class="modal-just-subtitulo">Hito: <strong id="nombreHitoVer"></strong></p>
+
+            <!-- Texto de la justificación enviada por el programador -->
+            <div class="modal-ver-just-texto" id="textoJustificacionVer"></div>
+
+            <!-- Botones principales: Aceptar y Rechazar -->
+            <div class="modal-just-acciones">
+                <button id="btnRechazarJust"  class="btn-just-rechazar">❌ Rechazar</button>
+                <button id="btnAceptarJust"   class="btn-just-enviar">✅ Aceptar</button>
+            </div>
+
+            <!-- Sección de motivo de rechazo: oculta hasta que se presione Rechazar -->
+            <div id="seccionMotivoRechazo" class="seccion-motivo-rechazo" style="display:none;">
+                <p class="modal-just-aviso">Escribe el motivo del rechazo. El programador recibirá una notificación con este texto.</p>
+                <textarea
+                    id="txtMotivoRechazo"
+                    class="modal-just-textarea"
+                    placeholder="Motivo del rechazo..."
+                    maxlength="300"
+                    rows="3"
+                ></textarea>
+                <button id="btnConfirmarRechazo" class="btn-just-rechazar-confirm">Confirmar rechazo</button>
+            </div>
+
+            <button id="btnCerrarVerJust" class="btn-just-cerrar">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- MODAL DE JUSTIFICACIÓN DE RETRASO -->
+    <!-- Solo visible para el Programador cuando un hito fue reportado y tienen menos de 48h para justificarse -->
+    <div id="modalJustificacion" class="modal-just-overlay" style="display:none;">
+        <div class="modal-just-box">
+            <h3 class="modal-just-titulo">✏️ Justificar Retraso</h3>
+            <p class="modal-just-subtitulo">
+                Hito: <strong id="nombreHitoJust"></strong>
+            </p>
+            <p class="modal-just-aviso">
+                Tienes <strong>48 horas</strong> desde el reporte para enviar tu justificación. La empresa recibirá una notificación con tu explicación.
+            </p>
+            <textarea
+                id="txtJustificacion"
+                class="modal-just-textarea"
+                placeholder="Explica el motivo del retraso..."
+                maxlength="500"
+                rows="4"
+            ></textarea>
+            <div class="modal-just-acciones">
+                <button id="btnCancelarJust" class="btn-just-cancelar">Cancelar</button>
+                <button id="btnEnviarJust"   class="btn-just-enviar">Enviar justificación</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="workspace.js"></script>
     <script type="module">
         import { iniciarNavbar } from "./navbar.js";

@@ -95,6 +95,12 @@ onAuthStateChanged(auth, async (user) => {
     await cargarReputacion(user.uid);
     await verificarSanciones(user.uid, userData);
     await verificarAlertasEntrega(user.uid, userData.rol);
+
+    // Panel de faltas: solo visible para el Programador
+    // Muestra cuántas faltas lleva y si está suspendido
+    if (userData.rol === 'Programador') {
+        await cargarPanelFaltas(user.uid);
+    }
 });
 
 
@@ -664,9 +670,13 @@ async function verificarSanciones(uid, userData) {
 // MÓDULO 6.5 — Alertas de 10 días antes de entrega
 // ═══════════════════════════════════════════════════
 async function verificarAlertasEntrega(uid, rol) {
-    const ahora     = new Date();
+    const ahora      = new Date();
     const contenedor = document.getElementById('alertasEntrega');
     if (!contenedor) return;
+
+    // Limpiar el contenedor antes de agregar items para evitar que se dupliquen
+    // al volver a cargar la página (el usuario ya pudo haberlos cerrado antes)
+    contenedor.innerHTML = '';
 
     const campoId = rol === 'Programador' ? 'programadorId' : 'empresaId';
 
@@ -798,3 +808,41 @@ async function cargarProyectosJobifyEnPortafolio(uid) {
         grid.appendChild(card);
     }
 }
+
+// ─── PANEL DE FALTAS (solo Programador) ──────────────────────────────────────
+// Lee el campo 'faltas' y 'suspendido' del documento del usuario en Firestore
+// y lo muestra en un panel visual dentro del perfil para que el programador
+// sepa en todo momento cuántas faltas lleva y cuál es su estado.
+async function cargarPanelFaltas(uid) {
+    const panelFaltas = document.getElementById('panelFaltas');
+    if (!panelFaltas) return;
+
+    const snap = await getDoc(doc(db, 'usuarios', uid));
+    if (!snap.exists()) return;
+    const data = snap.data();
+
+    const faltas     = data.faltas     || 0;
+    const suspendido = data.suspendido || false;
+
+    // Mostrar el panel
+    panelFaltas.style.display = 'block';
+
+    // Rellenar los valores
+    document.getElementById('faltasNum').innerText     = faltas;
+    document.getElementById('faltasMax').innerText     = '3';
+    document.getElementById('faltasBarra').style.width = `${Math.min((faltas / 3) * 100, 100)}%`;
+    document.getElementById('faltasBarra').style.background =
+        faltas === 0 ? '#10B981' : faltas === 1 ? '#F59E0B' : '#EF4444';
+
+    const estadoEl = document.getElementById('faltasEstado');
+    if (suspendido) {
+        estadoEl.innerText   = '🔴 Cuenta suspendida — No puedes postularte a nuevos proyectos.';
+        estadoEl.style.color = '#DC2626';
+    } else if (faltas === 0) {
+        estadoEl.innerText   = '🟢 Sin faltas — Tu historial está limpio.';
+        estadoEl.style.color = '#059669';
+    } else {
+        estadoEl.innerText   = `🟡 ${faltas} falta${faltas !== 1 ? 's' : ''} registrada${faltas !== 1 ? 's' : ''} — Al llegar a 3 tu cuenta será suspendida.`;
+        estadoEl.style.color = '#D97706';
+    }
+}
