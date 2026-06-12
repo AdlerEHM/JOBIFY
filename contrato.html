@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobify - Contrato</title>
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="contrato.css">
+    <link rel="stylesheet" href="navbar.css">
+    <!-- jsPDF para generar el PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+    <header class="top-bar">
+        <button class="btn-back" onclick="window.location.href='misproyectos.html'">← Volver</button>
+        <h2 class="logo-text">JOBIFY</h2>
+        <div class="user-actions">
+            <span id="roleBadge" class="role-badge">...</span>
+            <!-- NOTIFICACIONES -->
+                <div class="notif-wrapper">
+                    <button class="notif-bell" id="notifBell">🔔
+                        <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+                    </button>
+                    <div class="notif-dropdown" id="notifDropdown">
+                        <div class="notif-header">
+                            <h4>Notificaciones</h4>
+                            <button class="btn-marcar-todas" id="btnMarcarTodas">✓ Marcar todas</button>
+                        </div>
+                        <div class="notif-lista" id="notifLista"></div>
+                    </div>
+                </div>
+            
+            <div class="profile-container-nav">
+                <div class="profile-trigger" id="profileTrigger">
+                    <img id="userPhoto" src="" alt="" style="display:none;">
+                    <div id="userInitial">?</div>
+                </div>
+
+                <div class="profile-dropdown" id="profileDropdown">
+                    <div class="dropdown-header">
+                        <div class="large-profile-circle" id="menuInitial">?</div>
+                        <h4 id="menuName">Nombre Usuario</h4>
+                        <p id="menuEmail">correo@ejemplo.com</p>
+                    </div>
+                    <div class="dropdown-header-extra">
+                        <div class="menu-reputacion" id="menuReputacion"></div>
+                    </div>
+                    <div class="dropdown-body">
+                        <button onclick="window.location.href='perfil.html'" class="btn-menu">
+                             Configurar Perfil
+                        </button>
+                    </div>
+                    <div class="dropdown-footer">
+                        <button id="btnLogout" class="btn-logout-dropdown">Cerrar Sesión</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- LOADING -->
+    <div id="loadingState" class="loading-state">
+        <div class="spinner"></div>
+        <p>Cargando contrato...</p>
+    </div>
+
+    <!-- CONTENIDO -->
+    <main id="mainContent" style="display:none;">
+        <div class="contrato-layout">
+
+            <!-- VISOR DEL CONTRATO -->
+            <div class="contrato-viewer">
+                <div class="contrato-toolbar">
+                    <span class="contrato-label"> Contrato Digital — Jobify</span>
+                    <button id="btnDescargarPDF" class="btn-descargar">⬇️ Descargar PDF</button>
+                </div>
+
+                <!-- DOCUMENTO -->
+                <div class="contrato-doc" id="contratoDoc">
+
+                    <div class="doc-header">
+                        <h1 class="doc-title">CONTRATO DE SERVICIOS DE DESARROLLO</h1>
+                        <p class="doc-subtitle">Plataforma Jobify — Documento Digital con validez entre las partes</p>
+                        <div class="doc-folio">Folio: <span id="docFolio">-</span></div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="doc-section-title">1. IDENTIFICACIÓN DE LAS PARTES</h2>
+                        <div class="doc-grid">
+                            <div class="doc-field">
+                                <span class="doc-label">Empresa contratante</span>
+                                <span class="doc-value" id="empresaNombre">-</span>
+                            </div>
+                            <div class="doc-field">
+                                <span class="doc-label">Correo de la empresa</span>
+                                <span class="doc-value" id="empresaEmail">-</span>
+                            </div>
+                            <div class="doc-field">
+                                <span class="doc-label">Programador contratado</span>
+                                <span class="doc-value" id="programadorNombre">-</span>
+                            </div>
+                            <div class="doc-field">
+                                <span class="doc-label">Correo del programador</span>
+                                <span class="doc-value" id="programadorEmail">-</span>
+                            </div>
+                            <div class="doc-field">
+                                <span class="doc-label">Fecha de aceptación</span>
+                                <span class="doc-value" id="fechaAceptacion">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="doc-section-title">2. DESCRIPCIÓN DEL PROYECTO</h2>
+                        <div class="doc-field full">
+                            <span class="doc-label">Título</span>
+                            <span class="doc-value" id="proyTitulo">-</span>
+                        </div>
+                        <div class="doc-field full">
+                            <span class="doc-label">Descripción</span>
+                            <p class="doc-value doc-desc" id="proyDesc">-</p>
+                        </div>
+                        <div class="doc-grid">
+                            <div class="doc-field">
+                                <span class="doc-label">Nivel requerido</span>
+                                <span class="doc-value" id="proyNivel">-</span>
+                            </div>
+                            <div class="doc-field">
+                                <span class="doc-label">Tecnologías</span>
+                                <span class="doc-value" id="proyTags">-</span>
+                            </div>
+                            <div class="doc-field">
+                                <span class="doc-label">Categoría</span>
+                                <span class="doc-value" id="proyCategoria">-</span>
+                            </div>
+                            <div class="doc-field">
+                                <span class="doc-label">Tipo de proyecto</span>
+                                <span class="doc-value" id="proyTipo">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="doc-section-title">3. TÉRMINOS ECONÓMICOS Y DE ENTREGA</h2>
+                        <div class="doc-grid">
+                            <div class="doc-field">
+                                <span class="doc-label">Presupuesto acordado</span>
+                                <span class="doc-value" id="proyPresupuesto">-</span>
+                            </div>
+                            <div class="doc-field">
+                                <span class="doc-label">Duración estimada</span>
+                                <span class="doc-value" id="proyDuracion">-</span>
+                            </div>
+                            <div class="doc-field">
+                                <span class="doc-label">Modalidad de revisión</span>
+                                <span class="doc-value" id="proyEntrega">-</span>
+                            </div>
+                            <div class="doc-field">
+                                <span class="doc-label">Modalidad de pago</span>
+                                <span class="doc-value" id="proyPago">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="doc-section-title">4. OBLIGACIONES DEL PROGRAMADOR</h2>
+                        <ul class="doc-list">
+                            <li>Respetar el cronograma y fechas de entrega establecidas.</li>
+                            <li>Mantener comunicación fluida con la empresa a través de la plataforma.</li>
+                            <li>Garantizar la funcionalidad básica del sistema entregado.</li>
+                            <li>Responder a cambios menores razonables solicitados por la empresa.</li>
+                            <li>Responder al chat dentro de las 48 horas posteriores al inicio del proyecto.</li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="doc-section-title">5. OBLIGACIONES DE LA EMPRESA</h2>
+                        <ul class="doc-list">
+                            <li>Realizar los pagos en los tiempos y modalidades acordadas.</li>
+                            <li>Proporcionar retroalimentación clara y oportuna sobre las entregas.</li>
+                            <li>Respetar los tiempos de desarrollo establecidos en el cronograma.</li>
+                            <li>Calificar al programador dentro de los 7 días posteriores a la entrega final.</li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="doc-section-title">6. CLÁUSULAS DE CONFIDENCIALIDAD</h2>
+                        <p class="doc-text">Ambas partes se comprometen a no compartir información, código o documentación del proyecto sin autorización expresa de la otra parte. Esta obligación permanece vigente durante y después de la finalización del proyecto.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="doc-section-title">7. SANCIONES POR INCUMPLIMIENTO</h2>
+                        <p class="doc-text">La plataforma Jobify aplicará las siguientes penalizaciones:</p>
+                        <ul class="doc-list">
+                            <li>La empresa será penalizada con un <strong>7% sobre el valor del proyecto</strong> si no paga o no califica en los tiempos acordados.</li>
+                            <li>El programador podrá ser inhabilitado temporalmente (1 mes) tras acumular incumplimientos injustificados.</li>
+                            <li>Se establece una tolerancia de <strong>dos incumplimientos justificables</strong> antes de aplicar sanciones.</li>
+                            <li>La comisión de Jobify es de <strong>3.95% + $4 MXN</strong> por transacción.</li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="doc-section-title">8. VIGENCIA DEL CHAT</h2>
+                        <p class="doc-text">El canal de comunicación entre las partes permanecerá activo durante toda la vigencia del proyecto, más <strong>7 días adicionales</strong> tras la entrega final para resolución de dudas.</p>
+                    </div>
+
+                    <!-- FIRMAS -->
+                    <div class="doc-firmas">
+                        <div class="firma-box" id="firmaEmpresaBox">
+                            <div class="firma-estado" id="firmaEmpresaEstado">⏳ Pendiente de firma</div>
+                            <div class="firma-nombre" id="firmaEmpresaNombre">-</div>
+                            <div class="firma-rol">Empresa contratante</div>
+                            <div class="firma-fecha" id="firmaEmpresaFecha"></div>
+                        </div>
+                        <div class="firma-box" id="firmaProgramadorBox">
+                            <div class="firma-estado" id="firmaProgramadorEstado">⏳ Pendiente de firma</div>
+                            <div class="firma-nombre" id="firmaProgramadorNombre">-</div>
+                            <div class="firma-rol">Programador contratado</div>
+                            <div class="firma-fecha" id="firmaProgramadorFecha"></div>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- FIN DOCUMENTO -->
+            </div>
+
+            <!-- PANEL LATERAL -->
+            <div class="panel-lateral">
+
+                <!-- Estado de firmas -->
+                <div class="panel-card">
+                    <h3 class="panel-title">Estado del Contrato</h3>
+                    <div class="firmas-status">
+                        <div class="firma-status-item" id="statusEmpresa">
+                            <span class="status-icon">⏳</span>
+                            <div>
+                                <span class="status-nombre" id="statusEmpresaNombre">Empresa</span>
+                                <span class="status-label">Pendiente</span>
+                            </div>
+                        </div>
+                        <div class="firma-status-item" id="statusProgramador">
+                            <span class="status-icon">⏳</span>
+                            <div>
+                                <span class="status-nombre" id="statusProgNombre">Programador</span>
+                                <span class="status-label">Pendiente</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botón firmar -->
+                <div class="panel-card" id="panelFirmar" style="display:none;">
+                    <h3 class="panel-title">Tu Firma</h3>
+                    <p class="panel-subtitle">Al firmar confirmas que has leído y aceptas todos los términos de este contrato.</p>
+                    <button id="btnFirmar" class="btn-firmar"> Aceptar y Firmar</button>
+                </div>
+
+                <!-- Ya firmado por el usuario -->
+                <div class="panel-card" id="panelYaFirmado" style="display:none;">
+                    <div class="ya-firmado">
+                        <span>✅</span>
+                        <p>Ya firmaste este contrato.</p>
+                        <small>Esperando a la otra parte...</small>
+                    </div>
+                </div>
+
+                <!-- Ambos firmaron -->
+                <div class="panel-card" id="panelCompleto" style="display:none;">
+                    <div class="contrato-completo">
+                        <span>🎉</span>
+                        <h4>¡Contrato firmado!</h4>
+                        <p>Ambas partes han firmado. El workspace ya está habilitado.</p>
+                        <button class="btn-ir-workspace" id="btnIrWorkspace"> Ir al Workspace</button>
+                    </div>
+                </div>
+
+                <!-- Info del proyecto -->
+                <div class="panel-card">
+                    <h3 class="panel-title">Resumen del Proyecto</h3>
+                    <div class="resumen-item">
+                        <span class="resumen-label">Presupuesto</span>
+                        <span class="resumen-valor" id="resumenPresupuesto">-</span>
+                    </div>
+                    <div class="resumen-item">
+                        <span class="resumen-label">Duración</span>
+                        <span class="resumen-valor" id="resumenDuracion">-</span>
+                    </div>
+                    <div class="resumen-item">
+                        <span class="resumen-label">Nivel</span>
+                        <span class="resumen-valor" id="resumenNivel">-</span>
+                    </div>
+                    <div class="resumen-item">
+                        <span class="resumen-label">Modalidad de pago</span>
+                        <span class="resumen-valor" id="resumenPago">-</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="contrato.js"></script>
+    <script type="module">
+        import { iniciarNavbar } from "./navbar.js";
+        iniciarNavbar();
+    </script>
+</body>
+</html>
